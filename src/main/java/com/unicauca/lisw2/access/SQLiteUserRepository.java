@@ -1,9 +1,5 @@
 package com.unicauca.lisw2.access;
  
-import com.unicauca.lisw2.domain.Role;
-import com.unicauca.lisw2.domain.User;
-import com.unicauca.lisw2.domain.UserStatus;
- 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +8,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import com.unicauca.lisw2.domain.Role;
+import com.unicauca.lisw2.domain.User;
+import com.unicauca.lisw2.domain.UserStatus;
 
 
 // implementaion de IUserRepository usando JDB para SQLite
@@ -61,11 +61,11 @@ public class SQLiteUserRepository implements IUserRepository {
   public Optional<User> findByLogin(String login){
     String sql = "SELECT * FROM users WHERE login = ?";
     try(PreparedStatement ps = connection.prepareStatement(sql)){
-      ps.setString(1, sql);
+      ps.setString(1, login);
 
       try(ResultSet rs = ps.executeQuery()){
         if(rs.next()){
-          return Optional.of(mapRow(rs))
+          return Optional.of(mapRow(rs));
         }
         return Optional.empty();
       }
