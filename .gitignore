@@ -1,0 +1,17 @@
+# Maven
+target/
+
+# Base de datos SQLite generada localmente 
+*.db
+*.db-journal
+
+# VS Code
+.vscode/
+
+
+.idea/
+*.iml
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
