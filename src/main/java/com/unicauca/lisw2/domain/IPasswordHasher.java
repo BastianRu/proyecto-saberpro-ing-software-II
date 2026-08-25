@@ -1,8 +1,0 @@
-
-
-package  com.unicauca.lisw2.domain;
-
-public interface  IPasswordHasher {
-    String hash(String password);
-    boolean matches(String password, String hashedPassword);
-}
