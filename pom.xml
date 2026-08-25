@@ -75,7 +75,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.unicauca.lisw2.main.MainApp</mainClass>
+                    <mainClass>com.unicauca.lisw2t2g08.main.MainApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
