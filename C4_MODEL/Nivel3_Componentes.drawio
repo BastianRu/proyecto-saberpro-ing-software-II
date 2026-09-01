@@ -1,0 +1,124 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="7cvp1WFCKSKW8Bcv5V-D">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;graph TD\n    %% Elementos externos\n    SPA[\&quot;&lt;b&gt;Aplicación Web (SPA)&lt;/b&gt;&lt;br/&gt;[contenedor: Angular]\&quot;]\n    BD[(\&quot;&lt;b&gt;Base de Datos&lt;/b&gt;&lt;br/&gt;[contenedor: MariaDB]\&quot;)]\n    Storage[\&quot;&lt;b&gt;Almacenamiento de Archivos&lt;/b&gt;&lt;br/&gt;[contenedor: S3]\&quot;)]\n    Correo[\&quot;&lt;b&gt;Servicio de Notificaciones&lt;/b&gt;&lt;br/&gt;[sistema externo]\&quot;)]\n\n    %% Contenedor Principal: Servidor de Aplicación\n    subgraph ServidorApp [\&quot;&lt;b&gt;Servidor de Aplicación (Monolito Java / Spring Boot)&lt;/b&gt;\&quot;]\n        \n        %% CAPA DE PRESENTACIÓN\n        subgraph CapaPresentacion [\&quot;Capa de Presentación\&quot;]\n            RESTControllers[\&quot;&lt;b&gt;Controladores REST (API)&lt;/b&gt;&lt;br/&gt;[componentes]&lt;br/&gt;Reciben solicitudes, validan formato,&lt;br/&gt;autentican y retornan respuestas DTO\&quot;]\n        end\n\n        %% CAPA DE DOMINIO\n        subgraph CapaDominio [\&quot;Capa de Dominio\&quot;]\n            DomainServices[\&quot;&lt;b&gt;Servicios de Aplicación y Dominio&lt;/b&gt;&lt;br/&gt;[componentes]&lt;br/&gt;Contienen la lógica de negocio, validaciones,&lt;br/&gt;ciclo de vida y reglas de calificación\&quot;]\n        end\n\n        %% CAPA DE ACCESO A DATOS\n        subgraph CapaAccesoDatos [\&quot;Capa de Acceso a Datos\&quot;]\n            DataRepositories[\&quot;&lt;b&gt;Repositorios y Adaptadores&lt;/b&gt;&lt;br/&gt;[componentes]&lt;br/&gt;Implementan persistencia SQL (JPA),&lt;br/&gt;gestión de archivos S3 y envío de correo\&quot;]\n        end\n\n        %% CAPA TRANSVERSAL\n        subgraph CapaTransversal [\&quot;Capa Transversal\&quot;]\n            CrossCutting[\&quot;&lt;b&gt;Servicios Transversales&lt;/b&gt;&lt;br/&gt;[componentes]&lt;br/&gt;Seguridad (JWT), manejo centralizado de excepciones,&lt;br/&gt;logging y validadores genéricos\&quot;]\n        end\n\n    end\n\n    %% RELACIONES ENTRE COMPONENTES Y CAPAS\n    SPA --&gt;|\&quot;HTTPS / REST / JSON\&quot;| RESTControllers\n    \n    RESTControllers --&gt; DomainServices\n    DomainServices --&gt; DataRepositories\n    \n    DataRepositories --&gt;|\&quot;JDBC / SQL\&quot;| BD\n    DataRepositories --&gt;|\&quot;SDK / API\&quot;| Storage\n    DataRepositories -.-&gt;|\&quot;SMTP / API\&quot;| Correo\n\n    %% USO DE TRANSVERSALES\n    CapaPresentacion -.-&gt; CrossCutting\n    CapaDominio -.-&gt; CrossCutting\n    CapaAccesoDatos -.-&gt; CrossCutting\n\n    %% ESTILOS VISUALES\n    style ServidorApp fill:#111625,stroke:#2c527a,color:#ffffff\n    \n    style CapaPresentacion fill:#263238,stroke:#455a64,color:#ffffff\n    style CapaDominio fill:#1b3a4b,stroke:#006494,color:#ffffff\n    style CapaAccesoDatos fill:#2d1b36,stroke:#6a040f,color:#ffffff\n    style CapaTransversal fill:#3d3a00,stroke:#857c00,color:#ffffff\n\n    style SPA fill:#3a506b,stroke:#5bc0be,color:#ffffff,rx:10,ry:10\n    style BD fill:#4a1525,stroke:#a4133c,color:#ffffff\n    style Storage fill:#4c3b5c,stroke:#7209b7,color:#ffffff,rx:10,ry:10\n    style Correo fill:#212529,stroke:#6c757d,color:#ffffff,stroke-dasharray: 5 5,rx:10,ry:10&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="Ws82QmCEnclMcZ1gGAhV-60">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;Servidor de Aplicación (Monolito Java / Spring Boot)&lt;/b&gt;" mermaidId="n:ServidorApp" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#111625;strokeColor=#2c527a;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&lt;b&gt;Servidor de Aplicación (Monolito Java / Spring Boot)&lt;/b&gt;" id="Ws82QmCEnclMcZ1gGAhV-61">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-60" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#111625;strokeColor=#2c527a;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="751" width="728" x="420" y="210" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Capa de Presentación" mermaidId="n:CapaPresentacion" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#263238;strokeColor=#455a64;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Capa de Presentación" id="Ws82QmCEnclMcZ1gGAhV-62">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-61" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#263238;strokeColor=#455a64;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="143" width="322" x="190" y="60" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;Controladores REST (API)&lt;/b&gt;&lt;br&gt;[componentes:&amp;nbsp;Reciben solicitudes, autentican y retornan respuestas]" mermaidId="n:RESTControllers" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Controladores REST (API)&lt;/b&gt;&#xa;[componentes" id="Ws82QmCEnclMcZ1gGAhV-63">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-62" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="268" x="35" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-87" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-61" source="Ws82QmCEnclMcZ1gGAhV-64" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=light-dark(#000000,#000000);" target="Ws82QmCEnclMcZ1gGAhV-66">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Capa de Dominio" mermaidId="n:CapaDominio" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#1b3a4b;strokeColor=#006494;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Capa de Dominio" id="Ws82QmCEnclMcZ1gGAhV-64">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-61" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#1b3a4b;strokeColor=#006494;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="143" width="386" x="171" y="230" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;Servicios de Aplicación y Dominio&lt;/b&gt;&lt;br&gt;[componentes:&amp;nbsp;Contienen la lógica de negocio, validaciones, ciclo de vida]" mermaidId="n:DomainServices" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Servicios de Aplicación y Dominio&lt;/b&gt;&#xa;[componentes" id="Ws82QmCEnclMcZ1gGAhV-65">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-64" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="316" x="35" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-88" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-61" source="Ws82QmCEnclMcZ1gGAhV-66" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=light-dark(#000000,#000000);" target="Ws82QmCEnclMcZ1gGAhV-68">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Capa de Acceso a Datos" mermaidId="n:CapaAccesoDatos" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#2d1b36;strokeColor=#6a040f;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Capa de Acceso a Datos" id="Ws82QmCEnclMcZ1gGAhV-66">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-61" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#2d1b36;strokeColor=#6a040f;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="143" width="338" x="195" y="410" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;Repositorios y Adaptadores&lt;/b&gt;&lt;br&gt;[componentes:&amp;nbsp;Implementan persistencia SQL,gestión de archivos S3 y envío de correo]" mermaidId="n:DataRepositories" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Repositorios y Adaptadores&lt;/b&gt;&#xa;[componentes" id="Ws82QmCEnclMcZ1gGAhV-67">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-66" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="275" x="35" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Capa Transversal" mermaidId="n:CapaTransversal" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#3d3a00;strokeColor=#857c00;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="Capa Transversal" id="Ws82QmCEnclMcZ1gGAhV-68">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-61" style="html=1;whiteSpace=wrap;strokeWidth=1;verticalAlign=top;fillColor=#3d3a00;strokeColor=#857c00;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="143" width="307" x="210.5" y="590" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;Servicios Transversales&lt;/b&gt;&lt;br&gt;[componentes:&amp;nbsp;Seguridad (JWT), manejo centralizado de excepciones, y validaciones]" mermaidId="n:CrossCutting" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Servicios Transversales&lt;/b&gt;&#xa;[componentes" id="Ws82QmCEnclMcZ1gGAhV-69">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-68" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="85" width="247.5" x="35" y="45" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:CapaPresentacion-&gt;CrossCutting#0" mermaidBaseStyle="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;curved=1;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.9;entryX=1;entryY=1;" mermaidBaseValue="" id="Ws82QmCEnclMcZ1gGAhV-82">
+          <mxCell edge="1" parent="Ws82QmCEnclMcZ1gGAhV-61" source="Ws82QmCEnclMcZ1gGAhV-62" style="curved=1;dashed=1;dashPattern=2 3;fixDash=1;startArrow=none;endArrow=block;endSize=7;exitX=1;exitY=0.9;entryX=1.002;entryY=0.329;rounded=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=light-dark(#000000,#000000);" target="Ws82QmCEnclMcZ1gGAhV-68">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="599" y="188" />
+                <mxPoint x="599" y="213" />
+                <mxPoint x="599" y="238" />
+                <mxPoint x="599" y="300" />
+                <mxPoint x="599" y="361" />
+                <mxPoint x="599" y="386" />
+                <mxPoint x="599" y="411" />
+                <mxPoint x="599" y="473" />
+                <mxPoint x="599" y="534" />
+                <mxPoint x="599" y="569" />
+                <mxPoint x="599" y="603" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-86" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-61" source="Ws82QmCEnclMcZ1gGAhV-62" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.466;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;strokeColor=light-dark(#000000,#000000);" target="Ws82QmCEnclMcZ1gGAhV-64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <UserObject label="&quot;&lt;b&gt;Aplicación Web (SPA)&lt;/b&gt;&#xa;[contenedor: Angular" mermaidId="n:SPA" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#3a506b;strokeColor=#5bc0be;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Aplicación Web (SPA)&lt;/b&gt;&#xa;[contenedor: Angular" id="Ws82QmCEnclMcZ1gGAhV-72">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-60" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#3a506b;strokeColor=#5bc0be;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="223" x="690" y="50" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&quot;&lt;b&gt;Almacenamiento de Archivos&lt;/b&gt;&#xa;[contenedor: S3" mermaidId="n:Storage" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#4c3b5c;strokeColor=#7209b7;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="&quot;&lt;b&gt;Almacenamiento de Archivos&lt;/b&gt;&#xa;[contenedor: S3" id="Ws82QmCEnclMcZ1gGAhV-74">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-60" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#4c3b5c;strokeColor=#7209b7;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="73" width="281" x="970" y="1009.5" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="BD" mermaidId="n:BD" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#4a1525;strokeColor=#a4133c;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" mermaidBaseValue="BD" id="Ws82QmCEnclMcZ1gGAhV-76">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-60" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#4a1525;strokeColor=#a4133c;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;" vertex="1">
+            <mxGeometry height="54" width="79" x="744.5" y="1019" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Correo" mermaidId="n:Correo" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#212529;strokeColor=#6c757d;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;dashed=1;dashPattern=5 5;fixDash=1;" mermaidBaseValue="Correo" id="Ws82QmCEnclMcZ1gGAhV-77">
+          <mxCell parent="Ws82QmCEnclMcZ1gGAhV-60" style="html=1;whiteSpace=wrap;strokeWidth=1;fillColor=#212529;strokeColor=#6c757d;fontColor=#ffffff;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontSize=16;dashed=1;dashPattern=5 5;fixDash=1;" vertex="1">
+            <mxGeometry height="54" width="108" x="410" y="1019" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="HTTPS / REST / JSON" mermaidId="e:SPA-&gt;RESTControllers#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=1;entryY=1;" mermaidBaseValue="HTTPS / REST / JSON" id="Ws82QmCEnclMcZ1gGAhV-78">
+          <mxCell edge="1" parent="Ws82QmCEnclMcZ1gGAhV-60" source="Ws82QmCEnclMcZ1gGAhV-72" style="curved=1;startArrow=none;endArrow=block;endSize=7;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#E8E8E88D,#2a2a2a8D);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;rounded=0;" target="Ws82QmCEnclMcZ1gGAhV-61">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-89" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-60" source="Ws82QmCEnclMcZ1gGAhV-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=light-dark(#000000,#666666);" target="Ws82QmCEnclMcZ1gGAhV-77">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-90" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-60" source="Ws82QmCEnclMcZ1gGAhV-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=light-dark(#000000,#666666);" target="Ws82QmCEnclMcZ1gGAhV-76">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Ws82QmCEnclMcZ1gGAhV-91" edge="1" parent="Ws82QmCEnclMcZ1gGAhV-60" source="Ws82QmCEnclMcZ1gGAhV-68" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=light-dark(#000000,#333333);" target="Ws82QmCEnclMcZ1gGAhV-74">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

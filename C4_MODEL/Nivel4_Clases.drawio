@@ -1,0 +1,337 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="wMB2LWIDF_tJycyd6R8A">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;classDiagram\n    %% Capa de Presentación\n    class PreguntaController {\n        -IPreguntaService preguntaService\n        +crearPregunta(dto: PreguntaDTO) ResponseEntity\n        +editarPregunta(id: Long, dto: PreguntaDTO) ResponseEntity\n        +cambiarEstado(id: Long, estado: EstadoPregunta) ResponseEntity\n    }\n\n    %% Capa de Dominio - Interfaces (DIP)\n    class IPreguntaService {\n        &lt;&lt;interface&gt;&gt;\n        +crearPregunta(pregunta: Pregunta) Pregunta\n        +actualizarPregunta(id: Long, pregunta: Pregunta) Pregunta\n        +cambiarEstado(id: Long, nuevoEstado: EstadoPregunta) void\n    }\n\n    class IValidadorPregunta {\n        &lt;&lt;interface&gt;&gt;\n        +validarEstructura(pregunta: Pregunta) boolean\n    }\n\n    class IPreguntaRepository {\n        &lt;&lt;interface&gt;&gt;\n        +save(pregunta: Pregunta) Pregunta\n        +findById(id: Long) Optional~Pregunta~\n    }\n\n    %% Capa de Dominio - Servicios e Implementaciones\n    class PreguntaService {\n        -IPreguntaRepository preguntaRepository\n        -IValidadorPregunta validadorPregunta\n        +crearPregunta(pregunta: Pregunta) Pregunta\n        +actualizarPregunta(id: Long, pregunta: Pregunta) Pregunta\n        +cambiarEstado(id: Long, nuevoEstado: EstadoPregunta) void\n    }\n\n    class ValidadorPreguntaImpl {\n        +validarEstructura(pregunta: Pregunta) boolean\n    }\n\n    %% Capa de Dominio - Entidades y Value Objects\n    class Pregunta {\n        -Long id\n        -EstadoPregunta estado\n        +validar() boolean\n    }\n\n    class Contexto {\n        -String texto\n        -String urlImagen\n    }\n\n    class PreguntaDirecta {\n        -String enunciado\n    }\n\n    class Distractor {\n        -String texto\n        -boolean esCorrecta\n    }\n\n    class ClasificacionPregunta {\n        -String competencia\n        -String area\n        -String nivelDificultad\n    }\n\n    class EstadoPregunta {\n        &lt;&lt;enumeration&gt;&gt;\n        BORRADOR\n        EN_REVISION\n        APROBADA\n        RECHAZADA\n        PUBLICADA\n    }\n\n    %% Capa de Acceso a Datos - Implementación concreta\n    class PreguntaRepositoryJPA {\n        +save(pregunta: Pregunta) Pregunta\n        +findById(id: Long) Optional~Pregunta~\n    }\n\n    %% Realizaciones / Implementaciones de Interfaces (DIP)\n    IPreguntaService &lt;|.. PreguntaService\n    IValidadorPregunta &lt;|.. ValidadorPreguntaImpl\n    IPreguntaRepository &lt;|.. PreguntaRepositoryJPA\n\n    %% Dependencias entre Servicios/Controladores e Interfaces\n    PreguntaController --&gt; IPreguntaService\n    PreguntaService --&gt; IPreguntaRepository\n    PreguntaService --&gt; IValidadorPregunta\n\n    %% Relaciones de Dominio / Entidades\n    Pregunta *-- \&quot;1\&quot; Contexto : Composición\n    Pregunta *-- \&quot;1\&quot; PreguntaDirecta : Composición\n    Pregunta *-- \&quot;1..4\&quot; Distractor : Composición\n    Pregunta o-- \&quot;1\&quot; ClasificacionPregunta : Agregación\n    Pregunta --&gt; \&quot;1\&quot; EstadoPregunta : Usa&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="ubyKt6ePcd6j7KyHk4tx-1">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;PreguntaController&lt;/b&gt;" mermaidId="n:PreguntaController" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;PreguntaController&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-2">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="192" width="567" x="174" y="30" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-3" parent="ubyKt6ePcd6j7KyHk4tx-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-IPreguntaService preguntaService" vertex="1">
+          <mxGeometry height="24" width="567" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-4" parent="ubyKt6ePcd6j7KyHk4tx-2" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="567" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-5" parent="ubyKt6ePcd6j7KyHk4tx-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+crearPregunta(dto: PreguntaDTO) ResponseEntity" vertex="1">
+          <mxGeometry height="24" width="567" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-6" parent="ubyKt6ePcd6j7KyHk4tx-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+editarPregunta(id: Long, dto: PreguntaDTO) ResponseEntity" vertex="1">
+          <mxGeometry height="24" width="567" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-7" parent="ubyKt6ePcd6j7KyHk4tx-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+cambiarEstado(id: Long, estado: EstadoPregunta) ResponseEntity" vertex="1">
+          <mxGeometry height="24" width="567" y="156" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;IPreguntaService&lt;/b&gt;" mermaidId="n:IPreguntaService" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;IPreguntaService&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-8">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="192" width="524" x="196" y="320" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-9" parent="ubyKt6ePcd6j7KyHk4tx-8" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="524" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-10" parent="ubyKt6ePcd6j7KyHk4tx-8" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="524" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-11" parent="ubyKt6ePcd6j7KyHk4tx-8" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+crearPregunta(pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="524" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-12" parent="ubyKt6ePcd6j7KyHk4tx-8" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+actualizarPregunta(id: Long, pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="524" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-13" parent="ubyKt6ePcd6j7KyHk4tx-8" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+cambiarEstado(id: Long, nuevoEstado: EstadoPregunta) void" vertex="1">
+          <mxGeometry height="24" width="524" y="156" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;IValidadorPregunta&lt;/b&gt;" mermaidId="n:IValidadorPregunta" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;IValidadorPregunta&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-14">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="144" width="435" x="474" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-15" parent="ubyKt6ePcd6j7KyHk4tx-14" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="435" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-16" parent="ubyKt6ePcd6j7KyHk4tx-14" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="435" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-17" parent="ubyKt6ePcd6j7KyHk4tx-14" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+validarEstructura(pregunta: Pregunta) boolean" vertex="1">
+          <mxGeometry height="24" width="435" y="108" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;IPreguntaRepository&lt;/b&gt;" mermaidId="n:IPreguntaRepository" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;IPreguntaRepository&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-18">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="378" x="35" y="852" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-19" parent="ubyKt6ePcd6j7KyHk4tx-18" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="378" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-20" parent="ubyKt6ePcd6j7KyHk4tx-18" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="378" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-21" parent="ubyKt6ePcd6j7KyHk4tx-18" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+save(pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="378" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-22" parent="ubyKt6ePcd6j7KyHk4tx-18" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+findById(id: Long) Optional&lt;Pregunta&gt;" vertex="1">
+          <mxGeometry height="24" width="378" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;PreguntaService&lt;/b&gt;" mermaidId="n:PreguntaService" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;PreguntaService&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-23">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="522" x="197" y="586" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-24" parent="ubyKt6ePcd6j7KyHk4tx-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-IPreguntaRepository preguntaRepository" vertex="1">
+          <mxGeometry height="24" width="522" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-25" parent="ubyKt6ePcd6j7KyHk4tx-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-IValidadorPregunta validadorPregunta" vertex="1">
+          <mxGeometry height="24" width="522" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-26" parent="ubyKt6ePcd6j7KyHk4tx-23" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="522" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-27" parent="ubyKt6ePcd6j7KyHk4tx-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+crearPregunta(pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="522" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-28" parent="ubyKt6ePcd6j7KyHk4tx-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+actualizarPregunta(id: Long, pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="522" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-29" parent="ubyKt6ePcd6j7KyHk4tx-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+cambiarEstado(id: Long, nuevoEstado: EstadoPregunta) void" vertex="1">
+          <mxGeometry height="24" width="522" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;ValidadorPreguntaImpl&lt;/b&gt;" mermaidId="n:ValidadorPreguntaImpl" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;ValidadorPreguntaImpl&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-30">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="120" width="448" x="468" y="1082" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-31" parent="ubyKt6ePcd6j7KyHk4tx-30" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="448" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-32" parent="ubyKt6ePcd6j7KyHk4tx-30" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+validarEstructura(pregunta: Pregunta) boolean" vertex="1">
+          <mxGeometry height="24" width="448" y="84" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;Pregunta&lt;/b&gt;" mermaidId="n:Pregunta" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;Pregunta&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-33">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="225" x="1248" y="42" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-34" parent="ubyKt6ePcd6j7KyHk4tx-33" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-Long id" vertex="1">
+          <mxGeometry height="24" width="225" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-35" parent="ubyKt6ePcd6j7KyHk4tx-33" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-EstadoPregunta estado" vertex="1">
+          <mxGeometry height="24" width="225" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-36" parent="ubyKt6ePcd6j7KyHk4tx-33" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="225" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-37" parent="ubyKt6ePcd6j7KyHk4tx-33" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+validar() boolean" vertex="1">
+          <mxGeometry height="24" width="225" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;Contexto&lt;/b&gt;" mermaidId="n:Contexto" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;Contexto&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-38">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="144" width="181" x="770" y="344" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-39" parent="ubyKt6ePcd6j7KyHk4tx-38" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String texto" vertex="1">
+          <mxGeometry height="24" width="181" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-40" parent="ubyKt6ePcd6j7KyHk4tx-38" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String urlImagen" vertex="1">
+          <mxGeometry height="24" width="181" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-41" parent="ubyKt6ePcd6j7KyHk4tx-38" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="181" y="108" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;PreguntaDirecta&lt;/b&gt;" mermaidId="n:PreguntaDirecta" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;PreguntaDirecta&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-42">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="120" width="208" x="1000" y="356" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-43" parent="ubyKt6ePcd6j7KyHk4tx-42" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String enunciado" vertex="1">
+          <mxGeometry height="24" width="208" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-44" parent="ubyKt6ePcd6j7KyHk4tx-42" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="208" y="84" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;Distractor&lt;/b&gt;" mermaidId="n:Distractor" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;Distractor&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-45">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="144" width="205" x="1258" y="344" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-46" parent="ubyKt6ePcd6j7KyHk4tx-45" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String texto" vertex="1">
+          <mxGeometry height="24" width="205" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-47" parent="ubyKt6ePcd6j7KyHk4tx-45" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-boolean esCorrecta" vertex="1">
+          <mxGeometry height="24" width="205" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-48" parent="ubyKt6ePcd6j7KyHk4tx-45" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="205" y="108" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;ClasificacionPregunta&lt;/b&gt;" mermaidId="n:ClasificacionPregunta" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;ClasificacionPregunta&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-49">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="258" x="1512" y="332" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-50" parent="ubyKt6ePcd6j7KyHk4tx-49" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String competencia" vertex="1">
+          <mxGeometry height="24" width="258" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-51" parent="ubyKt6ePcd6j7KyHk4tx-49" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String area" vertex="1">
+          <mxGeometry height="24" width="258" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-52" parent="ubyKt6ePcd6j7KyHk4tx-49" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-String nivelDificultad" vertex="1">
+          <mxGeometry height="24" width="258" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-53" parent="ubyKt6ePcd6j7KyHk4tx-49" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="258" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EstadoPregunta&lt;/b&gt;" mermaidId="n:EstadoPregunta" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EstadoPregunta&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-54">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="240" width="172" x="1820" y="296" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-55" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«enumeration»" vertex="1">
+          <mxGeometry height="24" width="172" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-56" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="BORRADOR" vertex="1">
+          <mxGeometry height="24" width="172" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-57" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="EN_REVISION" vertex="1">
+          <mxGeometry height="24" width="172" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-58" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="APROBADA" vertex="1">
+          <mxGeometry height="24" width="172" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-59" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="RECHAZADA" vertex="1">
+          <mxGeometry height="24" width="172" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-60" parent="ubyKt6ePcd6j7KyHk4tx-54" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="PUBLICADA" vertex="1">
+          <mxGeometry height="24" width="172" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-61" parent="ubyKt6ePcd6j7KyHk4tx-54" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="172" y="204" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;PreguntaRepositoryJPA&lt;/b&gt;" mermaidId="n:PreguntaRepositoryJPA" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;PreguntaRepositoryJPA&lt;/b&gt;" id="ubyKt6ePcd6j7KyHk4tx-62">
+          <mxCell parent="ubyKt6ePcd6j7KyHk4tx-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="144" width="388" x="30" y="1070" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-63" parent="ubyKt6ePcd6j7KyHk4tx-62" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="388" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-64" parent="ubyKt6ePcd6j7KyHk4tx-62" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+save(pregunta: Pregunta) Pregunta" vertex="1">
+          <mxGeometry height="24" width="388" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-65" parent="ubyKt6ePcd6j7KyHk4tx-62" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+findById(id: Long) Optional&lt;Pregunta&gt;" vertex="1">
+          <mxGeometry height="24" width="388" y="108" as="geometry" />
+        </mxCell>
+        <UserObject label="" mermaidId="e:IPreguntaService-&gt;PreguntaService#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-66">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-8" style="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-23">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:IValidadorPregunta-&gt;ValidadorPreguntaImpl#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-67">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-14" style="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-30">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:IPreguntaRepository-&gt;PreguntaRepositoryJPA#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-68">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-18" style="curved=1;dashed=1;startArrow=mermaidExtension;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-62">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:PreguntaController-&gt;IPreguntaService#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-69">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-2" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-8">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:PreguntaService-&gt;IPreguntaRepository#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.14;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-70">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-23" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.14;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-18">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="224" y="827" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:PreguntaService-&gt;IValidadorPregunta#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.86;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="ubyKt6ePcd6j7KyHk4tx-71">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-23" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.86;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-14">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="692" y="827" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Composición" mermaidId="e:Pregunta-&gt;Contexto#0" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.68;entryX=0.5;entryY=0;" mermaidBaseValue="Composición" id="ubyKt6ePcd6j7KyHk4tx-72">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-33" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.68;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-38">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="860" y="259" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-73" parent="ubyKt6ePcd6j7KyHk4tx-72" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Composición" mermaidId="e:Pregunta-&gt;PreguntaDirecta#0" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.85;entryX=0.5;entryY=0;" mermaidBaseValue="Composición" id="ubyKt6ePcd6j7KyHk4tx-74">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-33" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.85;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-42">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1104" y="259" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-75" parent="ubyKt6ePcd6j7KyHk4tx-74" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Composición" mermaidId="e:Pregunta-&gt;Distractor#0" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="Composición" id="ubyKt6ePcd6j7KyHk4tx-76">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-33" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-45">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-77" parent="ubyKt6ePcd6j7KyHk4tx-76" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="1..4" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Agregación" mermaidId="e:Pregunta-&gt;ClasificacionPregunta#0" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.82;entryX=0.5;entryY=0;" mermaidBaseValue="Agregación" id="ubyKt6ePcd6j7KyHk4tx-78">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-33" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=0;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.82;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-49">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1641" y="259" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-79" parent="ubyKt6ePcd6j7KyHk4tx-78" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=bottom;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="Usa" mermaidId="e:Pregunta-&gt;EstadoPregunta#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.66;entryX=0.5;entryY=0;" mermaidBaseValue="Usa" id="ubyKt6ePcd6j7KyHk4tx-80">
+          <mxCell edge="1" parent="ubyKt6ePcd6j7KyHk4tx-1" source="ubyKt6ePcd6j7KyHk4tx-33" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.66;entryX=0.5;entryY=0;rounded=0;" target="ubyKt6ePcd6j7KyHk4tx-54">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1906" y="259" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="ubyKt6ePcd6j7KyHk4tx-81" parent="ubyKt6ePcd6j7KyHk4tx-80" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=bottom;" value="1" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
