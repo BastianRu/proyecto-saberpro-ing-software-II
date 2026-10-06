@@ -1,9 +1,7 @@
-# Taller 2 - Principios SOLID
+# Proyecto Banco de Preguntas Pruebas Saber Pro
 
 Aplicación de escritorio en Java (JavaFX + SQLite) construida siguiendo los
-principios SOLID, con Inversión de Dependencias como eje central (basada en el
-"ejemplo 5" visto en la clase teórica de Laboratorio de Ingeniería del
-Software II).
+principios SOLID, con Inversión de Dependencias como eje central
 
 ## Historia de usuario implementada
 
@@ -58,6 +56,3 @@ mvn test
 Cubren `User`, `PasswordPolicy` y `UserService` (con repositorio y hasher
 falsos).
 
-## Diagramas
-
-Los diagramas del modelo C4 se encuentran en la carpeta `C4_MODEL/`.
