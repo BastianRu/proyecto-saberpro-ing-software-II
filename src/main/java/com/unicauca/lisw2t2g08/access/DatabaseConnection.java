@@ -34,7 +34,8 @@ public final class DatabaseConnection{
   }
 
 
-  private static void initializeSchema(Connection connection) throws SQLException{
+  // Publico para que las pruebas puedan crear el esquema en una base en memoria
+  public static void initializeSchema(Connection connection) throws SQLException{
 
 
     String sql = "CREATE TABLE IF NOT EXISTS users(" +
@@ -46,8 +47,25 @@ public final class DatabaseConnection{
     "hashed_password TEXT NOT NULL" +
     ");";
 
+    String questionsSql = "CREATE TABLE IF NOT EXISTS questions(" +
+    "id TEXT PRIMARY KEY," +
+    "name TEXT NOT NULL," +
+    "statement TEXT NOT NULL," +
+    "correct_index INTEGER NOT NULL," +
+    "state TEXT NOT NULL" +
+    ");";
+
+    String optionsSql = "CREATE TABLE IF NOT EXISTS question_options(" +
+    "question_id TEXT NOT NULL REFERENCES questions(id)," +
+    "position INTEGER NOT NULL," +
+    "text TEXT NOT NULL," +
+    "PRIMARY KEY (question_id, position)" +
+    ");";
+
     try (var stmt = connection.createStatement()) {
       stmt.execute(sql);
+      stmt.execute(questionsSql);
+      stmt.execute(optionsSql);
     }
 
 

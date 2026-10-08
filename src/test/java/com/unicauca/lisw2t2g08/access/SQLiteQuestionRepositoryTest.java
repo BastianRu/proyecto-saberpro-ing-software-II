@@ -1,0 +1,130 @@
+package com.unicauca.lisw2t2g08.access;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.unicauca.lisw2t2g08.domain.Question;
+import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
+import com.unicauca.lisw2t2g08.domain.QuestionState;
+
+/**
+ * Pruebas del repositorio SQLite de preguntas sobre una base de datos en
+ * memoria, de modo que no se toca el archivo taller2.db.
+ */
+class SQLiteQuestionRepositoryTest {
+
+    private Connection connection;
+    private IQuestionRepository repository;
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        connection = DriverManager.getConnection("jdbc:sqlite::memory:");
+        DatabaseConnection.initializeSchema(connection);
+        repository = new SQLiteQuestionRepository(connection);
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        connection.close();
+    }
+
+    private Question question(String id) {
+        return new Question(id, "Pregunta " + id, "Enunciado de " + id,
+                new QuestionDistractors(List.of("Opcion A", "Opcion B", "Opcion C"), 2),
+                QuestionState.BORRADOR);
+    }
+
+    @Test
+    @DisplayName("Guarda una pregunta y la recupera con sus opciones en orden")
+    void shouldSaveAndFindQuestionWithOptions() {
+        assertTrue(repository.save(question("P-100")));
+
+        Question stored = repository.findById("P-100").orElseThrow();
+        assertEquals("Pregunta P-100", stored.getName());
+        assertEquals("Enunciado de P-100", stored.getStatement());
+        assertEquals(List.of("Opcion A", "Opcion B", "Opcion C"), stored.getDistractors().getOptions());
+        assertEquals("Opcion C", stored.getCorrectAnswer());
+        assertEquals(QuestionState.BORRADOR, stored.getState());
+    }
+
+    @Test
+    @DisplayName("Buscar por un id inexistente o nulo devuelve vacio")
+    void shouldReturnEmptyForUnknownId() {
+        assertTrue(repository.findById("NO-EXISTE").isEmpty());
+        assertTrue(repository.findById(null).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Rechaza ids duplicados y preguntas nulas")
+    void shouldSaveOnlyNewQuestions() {
+        assertTrue(repository.save(question("P-100")));
+        assertFalse(repository.save(question("P-100")));
+        assertFalse(repository.save(null));
+        assertEquals(1, repository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("Actualiza el estado y las opciones de una pregunta existente")
+    void shouldUpdateExistingQuestion() {
+        repository.save(question("P-100"));
+        Question stored = repository.findById("P-100").orElseThrow();
+        stored.changeState(QuestionState.ELIMINADA);
+        stored.setDistractors(new QuestionDistractors(List.of("Si", "No"), 0));
+
+        assertTrue(repository.update(stored));
+
+        Question updated = repository.findById("P-100").orElseThrow();
+        assertEquals(QuestionState.ELIMINADA, updated.getState());
+        assertEquals(List.of("Si", "No"), updated.getDistractors().getOptions());
+        assertEquals("Si", updated.getCorrectAnswer());
+    }
+
+    @Test
+    @DisplayName("No actualiza preguntas inexistentes ni nulas")
+    void shouldNotUpdateUnknownQuestions() {
+        assertFalse(repository.update(question("NO-EXISTE")));
+        assertFalse(repository.update(null));
+        assertTrue(repository.findById("NO-EXISTE").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Lista todas las preguntas ordenadas por id")
+    void shouldListAllQuestions() {
+        repository.save(question("P-002"));
+        repository.save(question("P-001"));
+
+        List<Question> all = repository.findAll();
+
+        assertEquals(2, all.size());
+        assertEquals("P-001", all.get(0).getId());
+        assertEquals("P-002", all.get(1).getId());
+    }
+
+    @Test
+    @DisplayName("Los datos de ejemplo se cargan solo si el repositorio esta vacio")
+    void shouldLoadSampleDataOnlyWhenEmpty() {
+        QuestionSampleData.loadIfEmpty(repository);
+        int sampleSize = repository.findAll().size();
+        assertEquals(8, sampleSize);
+
+        repository.findById("P-001").ifPresent(q -> {
+            q.changeState(QuestionState.ELIMINADA);
+            repository.update(q);
+        });
+        QuestionSampleData.loadIfEmpty(repository);
+
+        assertEquals(sampleSize, repository.findAll().size());
+        assertEquals(QuestionState.ELIMINADA, repository.findById("P-001").orElseThrow().getState());
+    }
+}

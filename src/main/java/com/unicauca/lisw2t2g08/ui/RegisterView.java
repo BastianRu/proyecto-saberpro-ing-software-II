@@ -25,13 +25,15 @@ public class RegisterView {
 
   private final Stage stage;
   private final IUserService userService;
+  private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
 
-  public RegisterView(Stage stage, IUserService userService){
+  public RegisterView(Stage stage, IUserService userService, QuestionBankWindows questionBank){
     this.stage = stage;
     this.userService = userService;
+    this.questionBank = questionBank;
     this.scene = buildScene();
   }
 
@@ -68,7 +70,7 @@ public class RegisterView {
  
         Button backButton = new Button("Volver a inicio de sesión");
         backButton.setOnAction(e -> {
-            LoginView loginView = new LoginView(stage, userService);
+            LoginView loginView = new LoginView(stage, userService, questionBank);
             stage.setScene(loginView.getScene());
         });
  

@@ -23,13 +23,15 @@ public class LoginView {
 
   private final Stage stage;
   private final IUserService userService;
+  private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
 
-  public LoginView(Stage stage, IUserService userService){
+  public LoginView(Stage stage, IUserService userService, QuestionBankWindows questionBank){
     this.stage = stage;
     this.userService = userService;
+    this.questionBank = questionBank;
     this.scene = buildScene();
   }
 
@@ -59,7 +61,7 @@ public class LoginView {
     loginButton.setOnAction(event -> {
       try{
         User user  = userService.login(loginField.getText(), passwordField.getText());
-        MainMenuView menuView = new MainMenuView(stage, user, userService);
+        MainMenuView menuView = new MainMenuView(stage, user, userService, questionBank);
         stage.setScene(menuView.getScene());
       } catch (AuthenticationException e) {
         errorLabel.setText(e.getMessage());
@@ -68,7 +70,7 @@ public class LoginView {
 
     Button goToRegisterButton = new Button("¿No tienes cuenta? Regístrate");
         goToRegisterButton.setOnAction(e -> {
-         RegisterView registerView = new RegisterView(stage, userService);
+         RegisterView registerView = new RegisterView(stage, userService, questionBank);
          stage.setScene(registerView.getScene());
         });
 

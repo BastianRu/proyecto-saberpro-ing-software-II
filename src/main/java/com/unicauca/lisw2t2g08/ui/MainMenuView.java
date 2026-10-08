@@ -21,13 +21,15 @@ public class MainMenuView {
   private final Stage stage;
   private final User user;
   private final IUserService userService;
+  private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
-  public MainMenuView(Stage stage, User user, IUserService userService){
+  public MainMenuView(Stage stage, User user, IUserService userService, QuestionBankWindows questionBank){
     this.stage = stage;
     this.user = user;
     this.userService = userService;
+    this.questionBank = questionBank;
     this.scene = buildScene();
   }
 
@@ -54,14 +56,27 @@ public class MainMenuView {
     }
 
 
+    if (canManageQuestions(user.getRole())) {
+      Button questionBankButton = new Button("Banco de preguntas");
+      questionBankButton.setOnAction(e -> questionBank.show());
+      layout.getChildren().add(questionBankButton);
+    }
+
+
     Button logoutButton = new Button("Cerrar sesión");
     logoutButton.setOnAction(e -> {
-      LoginView loginView = new LoginView(stage, userService);
+      questionBank.close();
+      LoginView loginView = new LoginView(stage, userService, questionBank);
       stage.setScene(loginView.getScene());
     });
     layout.getChildren().add(logoutButton);
 
     return new Scene(layout, 400, 300);
+  }
+
+  // Roles que gestionan el estado de las preguntas del banco
+  private boolean canManageQuestions(Role role) {
+    return role == Role.ADMINISTRADOR || role == Role.AUTOR_PREGUNTAS || role == Role.REVISOR;
   }
 
   private List<String> optionsForRole(Role role) {
