@@ -33,6 +33,34 @@ porcentajes.
 | Vista | `QuestionManagementView`, `QuestionStatisticsView`, `QuestionChartView` |
 | Controlador | `QuestionController` |
 
+**HE 3: Validación estructural** (patrón Pipeline / Tuberías y Filtros)
+
+Un borrador de pregunta (`QuestionDraft`) atraviesa una tubería de filtros en
+orden; cada filtro valida una regla y, si falla, la tubería se detiene y lanza
+una `ValidationException` con los errores encontrados.
+
+| Orden | Filtro | Requisito | Regla |
+|---|---|---|---|
+| 1 | `ContextFilter` | RF-08 | Toda pregunta debe tener contexto (mínimo 20 caracteres). |
+| 2 | `DirectQuestionFilter` | RF-09 | Una única pregunta directa, con formato de pregunta (termina en `?`, un solo `?`). |
+| 3 | `DistractorCountFilter` | RF-10 | Exactamente cuatro distractores (cinco opciones con la correcta). |
+| 4 | `ForbiddenExpressionFilter` | RF-12 | Se prohíben "Todas las anteriores" y "Ninguna de las anteriores". |
+| 5 | `DistractorFormatFilter` | RF-13 | Opciones no vacías, de al menos 3 caracteres, con mayúscula inicial y sin repetirse. |
+| 6 | `CorrectAnswerFilter` | RF-11 | Una única respuesta correcta, con índice válido y no repetida entre las opciones. |
+
+```java
+QuestionPipeline pipeline = new QuestionPipeline();
+try {
+    pipeline.run(draft);              // borrador válido: lo devuelve
+} catch (ValidationException e) {
+    e.getErrors();                    // lista de mensajes "RF-xx: ..."
+}
+```
+
+`QuestionPipeline` también acepta una lista de filtros propia
+(`new QuestionPipeline(List<Filter>)`) para componer tuberías a la medida.
+Por ahora el pipeline es una capa independiente: no está conectado a la interfaz.
+
 ## Arquitectura
 
 ```
@@ -47,6 +75,10 @@ src/main/java/com/unicauca/lisw2t2g08/
 │              IQuestionRepository, SQLiteQuestionRepository, QuestionSampleData
 ├── domain/    User, Role, UserStatus, PasswordPolicy, IPasswordHasher
 │              Question, QuestionDistractors, QuestionState, QuestionStatistics
+│              QuestionDraft (borrador que recorre el pipeline)
+├── pipeline/  Filter, QuestionPipeline, ValidationException (patrón Pipeline, HE 3)
+│              ContextFilter, DirectQuestionFilter, DistractorCountFilter,
+│              ForbiddenExpressionFilter, DistractorFormatFilter, CorrectAnswerFilter
 └── infra/     Observer, Subject (patrón Observer)
 ```
 
@@ -81,4 +113,10 @@ falsos), y en el banco de preguntas: `Question`, `QuestionDistractors`,
 `QuestionStatistics`, `Subject`, `QuestionService` (con `FakeQuestionRepository`
 y notificación a los observadores), `QuestionController` (con un servicio falso)
 y `SQLiteQuestionRepository` (sobre SQLite en memoria).
+
+Para HE 3 hay una clase de prueba por filtro (`ContextFilterTest`,
+`DirectQuestionFilterTest`, `DistractorCountFilterTest`,
+`ForbiddenExpressionFilterTest`, `DistractorFormatFilterTest`,
+`CorrectAnswerFilterTest`) y `QuestionPipelineTest`, que valida la tubería de
+punta a punta.
 
