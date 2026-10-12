@@ -40,7 +40,7 @@ public class MainApp extends Application {
         QuestionController questionController = new QuestionController(questionService);
         QuestionBankWindows questionBank = new QuestionBankWindows(questionController, questionService);
 
-        primaryStage.setTitle("Taller 2 - Gestión de Usuarios (SOLID)");
+        primaryStage.setTitle("Aplicación de Banco de Preguntas");
         LoginView loginView = new LoginView(primaryStage, userService, questionBank);
         primaryStage.setScene(loginView.getScene());
         // Al cerrar la ventana principal se cierran tambien las del banco de preguntas
