@@ -88,8 +88,10 @@ y las implementaciones concretas se inyectan en `MainApp`.
 
 ## Requisitos
 
-- JDK compatible con el `pom.xml`
-- Maven
+- JDK 17 o superior
+- Maven 3.8 o superior
+- Entorno gráfico (la aplicación es de escritorio con JavaFX 21)
+- Conexión a internet la primera vez, para descargar las dependencias (JavaFX, sqlite-jdbc, argon2-jvm)
 
 ## Cómo ejecutar
 
