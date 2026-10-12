@@ -108,4 +108,39 @@ class QuestionTest {
         assertEquals(one.hashCode(), same.hashCode());
         assertNotEquals(one, other);
     }
+
+    @Test
+    void modifyContentReemplazaLosCamposEnBorrador() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+        question.modifyContent("Nuevo nombre", "Nuevo contexto", "¿Nueva pregunta?",
+                new QuestionDistractors(List.of("Uno", "Dos"), 1), "Justif", "Biblio",
+                "Competencia", "Tema", "Subtema", DifficultyLevel.ALTA);
+
+        assertEquals("Nuevo nombre", question.getName());
+        assertEquals("Nuevo contexto", question.getContext());
+        assertEquals("¿Nueva pregunta?", question.getStatement());
+        assertEquals("Dos", question.getCorrectAnswer());
+        assertEquals("Subtema", question.getSubtopic());
+        assertEquals(DifficultyLevel.ALTA, question.getDifficulty());
+        assertEquals(QuestionState.BORRADOR, question.getState());
+    }
+
+    @Test
+    void modifyContentSeRechazaFueraDeBorrador() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+        question.changeState(QuestionState.PENDIENTE_REVISION);
+        assertThrows(IllegalStateException.class, () -> question.modifyContent("N", "C", "¿P?",
+                new QuestionDistractors(List.of("Uno", "Dos"), 0), "J", "B", "C", "T", "S",
+                DifficultyLevel.BAJA));
+    }
+
+    @Test
+    void modifyContentInvalidoNoDejaLaPreguntaAMedias() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+        String name = question.getName();
+        assertThrows(IllegalArgumentException.class, () -> question.modifyContent("Otro", "C", " ",
+                new QuestionDistractors(List.of("Uno", "Dos"), 0), "J", "B", "C", "T", "S",
+                DifficultyLevel.BAJA));
+        assertEquals(name, question.getName());
+    }
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.unicauca.lisw2t2g08.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.domain.Question;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
@@ -65,8 +66,9 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
         if (question == null || findById(question.getId()).isPresent()) {
             return false;
         }
-        String sql = "INSERT INTO questions (id, name, statement, correct_index, state)"
-                + " VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO questions (id, name, statement, correct_index, state,"
+                + " context, justification, bibliography, competence, topic, subtopic, difficulty)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         inTransaction(() -> {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                 ps.setString(1, question.getId());
@@ -74,6 +76,7 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
                 ps.setString(3, question.getStatement());
                 ps.setInt(4, question.getDistractors().getCorrectIndex());
                 ps.setString(5, question.getState().name());
+                bindContent(ps, 6, question);
                 ps.executeUpdate();
             }
             insertOptions(question);
@@ -86,8 +89,9 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
         if (question == null) {
             return false;
         }
-        String sql = "UPDATE questions SET name = ?, statement = ?, correct_index = ?, state = ?"
-                + " WHERE id = ?";
+        String sql = "UPDATE questions SET name = ?, statement = ?, correct_index = ?, state = ?,"
+                + " context = ?, justification = ?, bibliography = ?, competence = ?,"
+                + " topic = ?, subtopic = ?, difficulty = ? WHERE id = ?";
         boolean[] updated = {false};
         inTransaction(() -> {
             try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -95,7 +99,8 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
                 ps.setString(2, question.getStatement());
                 ps.setInt(3, question.getDistractors().getCorrectIndex());
                 ps.setString(4, question.getState().name());
-                ps.setString(5, question.getId());
+                bindContent(ps, 5, question);
+                ps.setString(12, question.getId());
                 updated[0] = ps.executeUpdate() > 0;
             }
             if (updated[0]) {
@@ -104,6 +109,17 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
             }
         }, "Error al actualizar la pregunta: " + question.getId());
         return updated[0];
+    }
+
+    // Asigna desde "first" los siete campos de contenido de RF-05
+    private void bindContent(PreparedStatement ps, int first, Question question) throws SQLException {
+        ps.setString(first, question.getContext());
+        ps.setString(first + 1, question.getJustification());
+        ps.setString(first + 2, question.getBibliography());
+        ps.setString(first + 3, question.getCompetence());
+        ps.setString(first + 4, question.getTopic());
+        ps.setString(first + 5, question.getSubtopic());
+        ps.setString(first + 6, question.getDifficulty() == null ? "" : question.getDifficulty().name());
     }
 
     private void insertOptions(Question question) throws SQLException {
@@ -145,11 +161,19 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
     // Convierte una fila del ResultSet (con sus opciones) en un objeto Question
     private Question mapRow(ResultSet rs) throws SQLException {
         String id = rs.getString("id");
+        String difficulty = rs.getString("difficulty");
         return new Question(
                 id,
                 rs.getString("name"),
+                rs.getString("context"),
                 rs.getString("statement"),
                 new QuestionDistractors(findOptions(id), rs.getInt("correct_index")),
+                rs.getString("justification"),
+                rs.getString("bibliography"),
+                rs.getString("competence"),
+                rs.getString("topic"),
+                rs.getString("subtopic"),
+                (difficulty == null || difficulty.isBlank()) ? null : DifficultyLevel.valueOf(difficulty),
                 QuestionState.valueOf(rs.getString("state")));
     }
 

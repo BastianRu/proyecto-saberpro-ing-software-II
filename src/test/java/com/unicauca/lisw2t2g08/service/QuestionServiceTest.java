@@ -164,4 +164,91 @@ class QuestionServiceTest {
     void shouldRejectNullQuestionOnRegister() {
         assertThrows(IllegalArgumentException.class, () -> service.registerQuestion(null));
     }
+
+    private com.unicauca.lisw2t2g08.domain.QuestionDraft validDraft() {
+        var draft = new com.unicauca.lisw2t2g08.domain.QuestionDraft();
+        draft.setName("Nueva");
+        draft.setContext("Contexto suficientemente largo para la pregunta.");
+        draft.setDirectQuestion("¿Cual es la respuesta correcta?");
+        draft.setOptions(List.of("Correcta", "Distractor uno", "Distractor dos",
+                "Distractor tres", "Distractor cuatro"));
+        draft.setCorrectIndex(2);
+        draft.setJustification("Porque si.");
+        draft.setBibliography("Libro.");
+        draft.setCompetence("Competencia");
+        draft.setTopic("Tema");
+        draft.setSubtopic("Subtema");
+        draft.setDifficulty(com.unicauca.lisw2t2g08.domain.DifficultyLevel.BAJA);
+        return draft;
+    }
+
+    @Test
+    @DisplayName("Crea una pregunta en Borrador con el siguiente id y notifica")
+    void shouldCreateQuestionAsDraft() {
+        SpyObserver observer = new SpyObserver();
+        service.addObserver(observer);
+
+        Question created = service.createQuestion(validDraft());
+
+        assertEquals("P-005", created.getId());
+        assertEquals(QuestionState.BORRADOR, created.getState());
+        assertEquals("Correcta", created.getDistractors().getOptions().get(0));
+        assertEquals("Distractor dos", created.getCorrectAnswer());
+        assertTrue(repository.findById("P-005").isPresent());
+        assertEquals(1, observer.calls);
+    }
+
+    @Test
+    @DisplayName("No crea la pregunta si la validacion estructural falla")
+    void shouldNotCreateInvalidQuestion() {
+        var draft = validDraft();
+        draft.setContext(null);
+
+        assertThrows(com.unicauca.lisw2t2g08.pipeline.ValidationException.class,
+                () -> service.createQuestion(draft));
+        assertEquals(4, repository.findAll().size());
+    }
+
+    @Test
+    @DisplayName("Modifica una pregunta en Borrador y notifica")
+    void shouldUpdateDraftQuestion() {
+        SpyObserver observer = new SpyObserver();
+        service.addObserver(observer);
+
+        Question updated = service.updateQuestion("P-001", validDraft());
+
+        assertEquals("Nueva", updated.getName());
+        assertEquals("Contexto suficientemente largo para la pregunta.",
+                repository.findById("P-001").orElseThrow().getContext());
+        assertEquals(1, observer.calls);
+    }
+
+    @Test
+    @DisplayName("No modifica preguntas que no estan en Borrador")
+    void shouldRejectUpdateOutsideDraft() {
+        assertThrows(IllegalStateException.class, () -> service.updateQuestion("P-003", validDraft()));
+        assertThrows(IllegalStateException.class, () -> service.updateQuestion("P-999", validDraft()));
+        assertEquals("Pregunta P-003", repository.findById("P-003").orElseThrow().getName());
+    }
+
+    @Test
+    @DisplayName("No modifica la pregunta si el nuevo contenido es invalido")
+    void shouldKeepQuestionWhenUpdateIsInvalid() {
+        var draft = validDraft();
+        draft.setOptions(List.of("Solo una"));
+
+        assertThrows(com.unicauca.lisw2t2g08.pipeline.ValidationException.class,
+                () -> service.updateQuestion("P-001", draft));
+        assertEquals("Pregunta P-001", repository.findById("P-001").orElseThrow().getName());
+    }
+
+    @Test
+    @DisplayName("Consulta preguntas aplicando los filtros")
+    void shouldSearchWithCriteria() {
+        assertEquals(4, service.searchQuestions(null).size());
+        assertEquals(2, service.searchQuestions(
+                new com.unicauca.lisw2t2g08.domain.QuestionCriteria().withState(QuestionState.BORRADOR)).size());
+        assertEquals(1, service.searchQuestions(
+                new com.unicauca.lisw2t2g08.domain.QuestionCriteria().withText("p-003")).size());
+    }
 }

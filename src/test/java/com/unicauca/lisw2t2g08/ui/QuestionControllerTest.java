@@ -2,6 +2,8 @@ package com.unicauca.lisw2t2g08.ui;
 
 import com.unicauca.lisw2t2g08.service.IQuestionService;
 import com.unicauca.lisw2t2g08.domain.Question;
+import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
+import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
@@ -46,6 +48,22 @@ class QuestionControllerTest {
         @Override
         public boolean registerQuestion(Question question) {
             return true;
+        }
+
+        @Override
+        public Question createQuestion(QuestionDraft draft) {
+            return question();
+        }
+
+        @Override
+        public Question updateQuestion(String id, QuestionDraft draft) {
+            this.lastId = id;
+            return question();
+        }
+
+        @Override
+        public List<Question> searchQuestions(QuestionCriteria criteria) {
+            return List.of(question());
         }
 
         @Override
@@ -110,5 +128,14 @@ class QuestionControllerTest {
     @DisplayName("Delega el calculo de estadisticas en el servicio")
     void shouldDelegateStatistics() {
         assertEquals(3, controller.getStatistics().getCount(QuestionState.BORRADOR));
+    }
+
+    @Test
+    @DisplayName("Delega crear, modificar y consultar en el servicio")
+    void shouldDelegateCreateUpdateAndSearch() {
+        assertEquals("P-001", controller.createQuestion(new QuestionDraft()).getId());
+        controller.updateQuestion("P-001", new QuestionDraft());
+        assertEquals("P-001", service.lastId);
+        assertEquals(1, controller.searchQuestions(new QuestionCriteria()).size());
     }
 }

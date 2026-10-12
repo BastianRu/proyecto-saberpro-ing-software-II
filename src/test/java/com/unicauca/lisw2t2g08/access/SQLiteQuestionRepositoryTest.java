@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.unicauca.lisw2t2g08.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.domain.Question;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
@@ -126,5 +127,49 @@ class SQLiteQuestionRepositoryTest {
 
         assertEquals(sampleSize, repository.findAll().size());
         assertEquals(QuestionState.ELIMINADA, repository.findById("P-001").orElseThrow().getState());
+    }
+
+    @Test
+    @DisplayName("Guarda y actualiza los campos de RF-05")
+    void shouldPersistQuestionContentFields() {
+        Question question = new Question("P-200", "Nombre", "Contexto", "¿Pregunta?",
+                new QuestionDistractors(List.of("Uno", "Dos"), 1), "Justificacion",
+                "Bibliografia", "Competencia", "Tema", "Subtema", DifficultyLevel.ALTA,
+                QuestionState.BORRADOR);
+        repository.save(question);
+
+        Question stored = repository.findById("P-200").orElseThrow();
+        assertEquals("Contexto", stored.getContext());
+        assertEquals("Justificacion", stored.getJustification());
+        assertEquals("Bibliografia", stored.getBibliography());
+        assertEquals("Competencia", stored.getCompetence());
+        assertEquals("Tema", stored.getTopic());
+        assertEquals("Subtema", stored.getSubtopic());
+        assertEquals(DifficultyLevel.ALTA, stored.getDifficulty());
+
+        stored.modifyContent("Nombre", "Otro contexto", "¿Pregunta?",
+                stored.getDistractors(), "Otra", "Biblio", "Comp", "Tema", "Sub", DifficultyLevel.BAJA);
+        assertTrue(repository.update(stored));
+
+        Question updated = repository.findById("P-200").orElseThrow();
+        assertEquals("Otro contexto", updated.getContext());
+        assertEquals(DifficultyLevel.BAJA, updated.getDifficulty());
+    }
+
+    @Test
+    @DisplayName("Agrega las columnas nuevas a una base creada antes de RF-05")
+    void shouldMigrateOldQuestionsTable() throws SQLException {
+        try (Connection old = DriverManager.getConnection("jdbc:sqlite::memory:");
+             var stmt = old.createStatement()) {
+            stmt.execute("CREATE TABLE questions(id TEXT PRIMARY KEY, name TEXT NOT NULL,"
+                    + " statement TEXT NOT NULL, correct_index INTEGER NOT NULL, state TEXT NOT NULL)");
+            stmt.execute("INSERT INTO questions VALUES ('P-1', 'Vieja', '¿Pregunta?', 0, 'BORRADOR')");
+            DatabaseConnection.initializeSchema(old);
+            stmt.execute("INSERT INTO question_options VALUES ('P-1', 0, 'Uno'), ('P-1', 1, 'Dos')");
+
+            Question stored = new SQLiteQuestionRepository(old).findById("P-1").orElseThrow();
+            assertEquals("", stored.getContext());
+            assertEquals(null, stored.getDifficulty());
+        }
     }
 }

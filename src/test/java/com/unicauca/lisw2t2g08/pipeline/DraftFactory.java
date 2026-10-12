@@ -1,5 +1,6 @@
 package com.unicauca.lisw2t2g08.pipeline;
 
+import com.unicauca.lisw2t2g08.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 
 import java.util.List;
@@ -21,6 +22,13 @@ final class DraftFactory {
                 "Impide reutilizar componentes",
                 "Requiere una base de datos distribuida"));
         draft.setCorrectIndex(0);
+        draft.setName("Ventaja del patron Pipeline");
+        draft.setJustification("El patron permite componer validaciones independientes.");
+        draft.setBibliography("Gamma et al. Design Patterns.");
+        draft.setCompetence("Diseno de software");
+        draft.setTopic("Patrones de diseno");
+        draft.setSubtopic("Pipeline");
+        draft.setDifficulty(DifficultyLevel.MEDIA);
         return draft;
     }
 

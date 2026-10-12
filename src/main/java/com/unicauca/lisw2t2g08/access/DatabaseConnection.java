@@ -52,7 +52,14 @@ public final class DatabaseConnection{
     "name TEXT NOT NULL," +
     "statement TEXT NOT NULL," +
     "correct_index INTEGER NOT NULL," +
-    "state TEXT NOT NULL" +
+    "state TEXT NOT NULL," +
+    "context TEXT NOT NULL DEFAULT ''," +
+    "justification TEXT NOT NULL DEFAULT ''," +
+    "bibliography TEXT NOT NULL DEFAULT ''," +
+    "competence TEXT NOT NULL DEFAULT ''," +
+    "topic TEXT NOT NULL DEFAULT ''," +
+    "subtopic TEXT NOT NULL DEFAULT ''," +
+    "difficulty TEXT NOT NULL DEFAULT ''" +
     ");";
 
     String optionsSql = "CREATE TABLE IF NOT EXISTS question_options(" +
@@ -68,7 +75,31 @@ public final class DatabaseConnection{
       stmt.execute(optionsSql);
     }
 
+    addMissingQuestionColumns(connection);
 
+
+  }
+
+
+  // Las bases creadas antes de RF-05 no tienen las columnas nuevas de questions
+  private static void addMissingQuestionColumns(Connection connection) throws SQLException{
+
+    java.util.Set<String> existing = new java.util.HashSet<>();
+    try (var stmt = connection.createStatement();
+         var rs = stmt.executeQuery("PRAGMA table_info(questions)")) {
+      while (rs.next()) {
+        existing.add(rs.getString("name"));
+      }
+    }
+
+    for (String column : new String[]{"context", "justification", "bibliography",
+        "competence", "topic", "subtopic", "difficulty"}) {
+      if (!existing.contains(column)) {
+        try (var stmt = connection.createStatement()) {
+          stmt.execute("ALTER TABLE questions ADD COLUMN " + column + " TEXT NOT NULL DEFAULT ''");
+        }
+      }
+    }
   }
 
 

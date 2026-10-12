@@ -16,6 +16,13 @@ public class Question {
     private String statement;
     private QuestionDistractors distractors;
     private QuestionState state;
+    private String context = "";
+    private String justification = "";
+    private String bibliography = "";
+    private String competence = "";
+    private String topic = "";
+    private String subtopic = "";
+    private DifficultyLevel difficulty;
 
     /**
      * @param id          identificador unico, por ejemplo "P-001".
@@ -43,6 +50,87 @@ public class Question {
         this.statement = statement;
         this.distractors = distractors;
         this.state = (state == null) ? QuestionState.BORRADOR : state;
+    }
+
+    /**
+     * Constructor completo con los campos de RF-05. El enunciado corresponde a
+     * la pregunta directa. Los textos nulos se guardan como cadena vacia; la
+     * exigencia de que esten completos la aplica la tuberia de validacion.
+     */
+    public Question(String id, String name, String context, String statement,
+                    QuestionDistractors distractors, String justification,
+                    String bibliography, String competence, String topic,
+                    String subtopic, DifficultyLevel difficulty, QuestionState state) {
+        this(id, name, statement, distractors, state);
+        this.context = nullToEmpty(context);
+        this.justification = nullToEmpty(justification);
+        this.bibliography = nullToEmpty(bibliography);
+        this.competence = nullToEmpty(competence);
+        this.topic = nullToEmpty(topic);
+        this.subtopic = nullToEmpty(subtopic);
+        this.difficulty = difficulty;
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public String getBibliography() {
+        return bibliography;
+    }
+
+    public String getCompetence() {
+        return competence;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public String getSubtopic() {
+        return subtopic;
+    }
+
+    public DifficultyLevel getDifficulty() {
+        return difficulty;
+    }
+
+    /**
+     * RF-06: reemplaza el contenido editable de la pregunta, solo si esta en
+     * estado Borrador. El id y el estado no cambian.
+     *
+     * @throws IllegalStateException    si la pregunta no esta en Borrador.
+     * @throws IllegalArgumentException si falta el nombre, la pregunta o las opciones.
+     */
+    public void modifyContent(String name, String context, String statement,
+                              QuestionDistractors distractors, String justification,
+                              String bibliography, String competence, String topic,
+                              String subtopic, DifficultyLevel difficulty) {
+        if (state != QuestionState.BORRADOR) {
+            throw new IllegalStateException(
+                    "Solo se pueden modificar preguntas en estado Borrador");
+        }
+        // Se validan todos los datos antes de asignar para no dejar la pregunta a medias
+        Question candidate = new Question(id, name, context, statement, distractors,
+                justification, bibliography, competence, topic, subtopic, difficulty, state);
+        this.name = candidate.name;
+        this.context = candidate.context;
+        this.statement = candidate.statement;
+        this.distractors = candidate.distractors;
+        this.justification = candidate.justification;
+        this.bibliography = candidate.bibliography;
+        this.competence = candidate.competence;
+        this.topic = candidate.topic;
+        this.subtopic = candidate.subtopic;
+        this.difficulty = candidate.difficulty;
     }
 
     public String getId() {

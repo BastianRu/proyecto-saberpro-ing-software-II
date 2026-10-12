@@ -10,7 +10,7 @@ import java.util.List;
  *
  * Encadena los filtros en orden: ContextFilter (RF-08) -> DirectQuestionFilter
  * (RF-09) -> DistractorCountFilter (RF-10) -> ForbiddenExpressionFilter
- * (RF-12) -> DistractorFormatFilter (RF-13) -> CorrectAnswerFilter (RF-11).
+ * (RF-12) -> DistractorFormatFilter (RF-13) -> CorrectAnswerFilter (RF-11) -> RequiredFieldsFilter (RF-05).
  * Si un filtro falla, la tuberia se detiene y propaga su ValidationException.
  */
 public class QuestionPipeline {
@@ -24,6 +24,7 @@ public class QuestionPipeline {
         filters.add(new ForbiddenExpressionFilter());
         filters.add(new DistractorFormatFilter());
         filters.add(new CorrectAnswerFilter());
+        filters.add(new RequiredFieldsFilter());
     }
 
     /**

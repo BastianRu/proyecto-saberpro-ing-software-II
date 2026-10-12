@@ -1,6 +1,8 @@
 package com.unicauca.lisw2t2g08.ui;
 
 import com.unicauca.lisw2t2g08.domain.Question;
+import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
+import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.service.IQuestionService;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
@@ -45,6 +47,27 @@ public class QuestionController {
      */
     public Optional<Question> findById(String id) {
         return service.findById(id);
+    }
+
+    /**
+     * RF-04: solicita crear una pregunta nueva en Borrador.
+     */
+    public Question createQuestion(QuestionDraft draft) {
+        return service.createQuestion(draft);
+    }
+
+    /**
+     * RF-06: solicita modificar una pregunta en Borrador.
+     */
+    public Question updateQuestion(String id, QuestionDraft draft) {
+        return service.updateQuestion(id, draft);
+    }
+
+    /**
+     * RF-07: consulta preguntas segun los filtros de la vista.
+     */
+    public List<Question> searchQuestions(QuestionCriteria criteria) {
+        return service.searchQuestions(criteria);
     }
 
     /**
