@@ -24,7 +24,7 @@ class QuestionCriteriaTest {
     void filtraPorEstadoYDificultad() {
         assertTrue(new QuestionCriteria().withState(QuestionState.BORRADOR)
                 .withDifficulty(DifficultyLevel.MEDIA).matches(question));
-        assertFalse(new QuestionCriteria().withState(QuestionState.ELIMINADA).matches(question));
+        assertFalse(new QuestionCriteria().withState(QuestionState.ARCHIVADA).matches(question));
         assertFalse(new QuestionCriteria().withDifficulty(DifficultyLevel.ALTA).matches(question));
     }
 

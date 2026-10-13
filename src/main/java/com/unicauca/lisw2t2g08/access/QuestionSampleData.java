@@ -60,7 +60,7 @@ public final class QuestionSampleData {
                         "Una clase debe heredar de una sola clase",
                         "Un metodo debe tener un solo parametro",
                         "Un paquete debe tener una sola clase"), 0,
-                "Diseño de software", "Principios SOLID", "SRP", DifficultyLevel.BAJA, QuestionState.PENDIENTE_REVISION));
+                "Diseño de software", "Principios SOLID", "SRP", DifficultyLevel.BAJA, QuestionState.EN_REVISION));
 
         repository.save(question("P-005", "Principio DIP",
                 "¿De que deben depender los modulos de alto nivel?",
@@ -69,7 +69,7 @@ public final class QuestionSampleData {
                         "De abstracciones",
                         "Del framework de persistencia",
                         "De la interfaz grafica"), 1,
-                "Diseño de software", "Principios SOLID", "DIP", DifficultyLevel.MEDIA, QuestionState.BORRADOR));
+                "Diseño de software", "Principios SOLID", "DIP", DifficultyLevel.MEDIA, QuestionState.RECHAZADA));
 
         repository.save(question("P-006", "Pruebas unitarias",
                 "¿Que caracteriza a una prueba unitaria?",
@@ -78,7 +78,7 @@ public final class QuestionSampleData {
                         "Requiere siempre una base de datos real",
                         "Verifica de forma aislada una unidad de codigo",
                         "Se ejecuta unicamente de forma manual"), 2,
-                "Calidad de software", "Pruebas", "Pruebas unitarias", DifficultyLevel.BAJA, QuestionState.ELIMINADA));
+                "Calidad de software", "Pruebas", "Pruebas unitarias", DifficultyLevel.BAJA, QuestionState.ARCHIVADA));
 
         repository.save(question("P-007", "Micro patron MVC",
                 "¿Que responsabilidad tiene el controlador en MVC?",
@@ -87,7 +87,7 @@ public final class QuestionSampleData {
                         "Renderizar los componentes graficos",
                         "Coordinar la vista con el modelo",
                         "Definir el esquema de la base de datos"), 2,
-                "Arquitectura de software", "Patrones arquitectónicos", "MVC", DifficultyLevel.MEDIA, QuestionState.BORRADOR));
+                "Arquitectura de software", "Patrones arquitectónicos", "MVC", DifficultyLevel.MEDIA, QuestionState.PUBLICADA));
 
         repository.save(question("P-008", "Saber Pro",
                 "¿Que competencia evalua el modulo de razonamiento cuantitativo?",
@@ -96,7 +96,7 @@ public final class QuestionSampleData {
                         "El uso de informacion cuantitativa para resolver problemas",
                         "El dominio de un segundo idioma",
                         "La redaccion de ensayos argumentativos"), 1,
-                "Razonamiento cuantitativo", "Saber Pro", "Competencias genéricas", DifficultyLevel.ALTA, QuestionState.PENDIENTE_REVISION));
+                "Razonamiento cuantitativo", "Saber Pro", "Competencias genéricas", DifficultyLevel.ALTA, QuestionState.APROBADA));
     }
 
     // RF-05: las preguntas de ejemplo llevan todos los campos de una pregunta completa

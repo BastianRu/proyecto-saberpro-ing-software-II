@@ -5,6 +5,7 @@ import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
 import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.service.IQuestionService;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
 
 import java.util.List;
@@ -71,7 +72,21 @@ public class QuestionController {
     }
 
     /**
-     * Solicita al modelo el cambio de estado de una pregunta.
+     * Solicita al modelo el cambio de estado de una pregunta, indicando el
+     * usuario que lo realiza para que quede en el historial de auditoria.
+     *
+     * @param id       identificador de la pregunta.
+     * @param newState estado destino.
+     * @param username usuario que realiza el cambio.
+     * @return true si el estado se actualizo.
+     */
+    public boolean changeState(String id, QuestionState newState, String username) {
+        return service.changeState(id, newState, username);
+    }
+
+    /**
+     * Solicita al modelo el cambio de estado de una pregunta sin usuario
+     * explicito (queda registrado como "sistema").
      *
      * @param id       identificador de la pregunta.
      * @param newState estado destino.
@@ -79,6 +94,14 @@ public class QuestionController {
      */
     public boolean changeState(String id, QuestionState newState) {
         return service.changeState(id, newState);
+    }
+
+    /**
+     * @param id identificador de la pregunta.
+     * @return historial de cambios de estado de la pregunta.
+     */
+    public List<QuestionStateChange> stateHistory(String id) {
+        return service.stateHistory(id);
     }
 
     /**

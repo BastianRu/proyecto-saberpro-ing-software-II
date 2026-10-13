@@ -6,6 +6,7 @@ import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
 import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,7 @@ class QuestionControllerTest {
 
         private String lastId;
         private QuestionState lastState;
+        private String lastUser;
 
         @Override
         public List<Question> listQuestions() {
@@ -67,10 +69,16 @@ class QuestionControllerTest {
         }
 
         @Override
-        public boolean changeState(String id, QuestionState newState) {
+        public boolean changeState(String id, QuestionState newState, String username) {
             this.lastId = id;
             this.lastState = newState;
+            this.lastUser = username;
             return true;
+        }
+
+        @Override
+        public List<QuestionStateChange> stateHistory(String id) {
+            return List.of();
         }
 
         @Override
@@ -116,12 +124,21 @@ class QuestionControllerTest {
     }
 
     @Test
-    @DisplayName("Traslada al servicio el cambio de estado solicitado por la vista")
+    @DisplayName("Traslada al servicio el cambio de estado y el usuario de la sesión")
     void shouldDelegateChangeState() {
-        assertTrue(controller.changeState("P-001", QuestionState.ELIMINADA));
+        assertTrue(controller.changeState("P-001", QuestionState.ARCHIVADA, "juan"));
 
         assertEquals("P-001", service.lastId);
-        assertEquals(QuestionState.ELIMINADA, service.lastState);
+        assertEquals(QuestionState.ARCHIVADA, service.lastState);
+        assertEquals("juan", service.lastUser);
+    }
+
+    @Test
+    @DisplayName("El cambio de estado sin usuario se delega al servicio")
+    void shouldDelegateChangeStateWithoutUser() {
+        assertTrue(controller.changeState("P-001", QuestionState.PENDIENTE_REVISION));
+
+        assertEquals(QuestionState.PENDIENTE_REVISION, service.lastState);
     }
 
     @Test

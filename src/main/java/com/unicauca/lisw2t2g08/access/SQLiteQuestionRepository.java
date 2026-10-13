@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import com.unicauca.lisw2t2g08.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.domain.Question;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 
 /**
  * Implementacion de IQuestionRepository usando JDBC para SQLite.
@@ -109,6 +111,58 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
             }
         }, "Error al actualizar la pregunta: " + question.getId());
         return updated[0];
+    }
+
+    @Override
+    public void saveStateChange(QuestionStateChange change) {
+        if (change == null) {
+            return;
+        }
+        String sql = "INSERT INTO question_state_history (question_id, from_state, to_state,"
+                + " username, changed_at) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, change.getQuestionId());
+            ps.setString(2, change.getFromState() == null ? null : change.getFromState().name());
+            ps.setString(3, change.getToState().name());
+            ps.setString(4, change.getUsername());
+            ps.setString(5, change.getChangedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al registrar el cambio de estado de la pregunta: "
+                    + change.getQuestionId(), e);
+        }
+    }
+
+    @Override
+    public List<QuestionStateChange> findStateHistory(String questionId) {
+        if (questionId == null) {
+            return List.of();
+        }
+        String sql = "SELECT question_id, from_state, to_state, username, changed_at"
+                + " FROM question_state_history WHERE question_id = ? ORDER BY id";
+        List<QuestionStateChange> history = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    history.add(mapStateChangeRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar el historial de la pregunta: "
+                    + questionId, e);
+        }
+        return history;
+    }
+
+    private QuestionStateChange mapStateChangeRow(ResultSet rs) throws SQLException {
+        String from = rs.getString("from_state");
+        return new QuestionStateChange(
+                rs.getString("question_id"),
+                from == null ? null : QuestionState.valueOf(from),
+                QuestionState.valueOf(rs.getString("to_state")),
+                rs.getString("username"),
+                LocalDateTime.parse(rs.getString("changed_at")));
     }
 
     // Asigna desde "first" los siete campos de contenido de RF-05
