@@ -6,10 +6,12 @@ import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
 import com.unicauca.lisw2t2g08.infra.Subject;
 import com.unicauca.lisw2t2g08.pipeline.QuestionPipeline;
 
+import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -163,27 +165,48 @@ public class QuestionService extends Subject implements IQuestionService {
     }
 
     /**
-     * Cambia el estado de una pregunta y, si el cambio se aplica, notifica a
-     * todas las vistas observadoras con las estadisticas actualizadas.
+     * Cambia el estado de una pregunta. La transicion se valida en la entidad
+     * con la maquina de estados (HU04-02). Si el cambio se aplica, se registra
+     * en el historial de auditoria con el usuario y la fecha (HU04-01) y se
+     * notifica a todas las vistas observadoras con las estadisticas.
      *
      * @param id       identificador de la pregunta.
      * @param newState estado destino.
-     * @return true si el estado se actualizo.
+     * @param username usuario que realiza el cambio; si falta se usa "sistema".
+     * @return true si el estado se actualizo o ya era el indicado.
      * @throws IllegalStateException si la transicion no es valida.
      */
     @Override
-    public boolean changeState(String id, QuestionState newState) {
+    public boolean changeState(String id, QuestionState newState, String username) {
         Optional<Question> found = findById(id);
         if (found.isEmpty()) {
             return false;
         }
         Question question = found.get();
+        QuestionState previous = question.getState();
         question.changeState(newState);
+        if (previous == question.getState()) {
+            return true; // sin cambio real: no se registra ni se notifica
+        }
         boolean updated = repository.update(question);
         if (updated) {
+            repository.saveStateChange(new QuestionStateChange(
+                    id, previous, question.getState(), username, LocalDateTime.now()));
             notifyAllObservers(getStatistics());
         }
         return updated;
+    }
+
+    /**
+     * @param id identificador de la pregunta.
+     * @return historial de cambios de estado de la pregunta.
+     */
+    @Override
+    public List<QuestionStateChange> stateHistory(String id) {
+        if (id == null || id.isBlank()) {
+            return List.of();
+        }
+        return repository.findStateHistory(id);
     }
 
     /**

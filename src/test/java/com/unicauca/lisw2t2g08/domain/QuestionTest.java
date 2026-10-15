@@ -8,6 +8,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pruebas unitarias de la entidad Question.
@@ -70,13 +71,51 @@ class QuestionTest {
     }
 
     @Test
-    @DisplayName("Una pregunta eliminada no puede volver a otro estado")
-    void shouldRejectReactivatingDeletedQuestion() {
-        Question question = newQuestion(QuestionState.ELIMINADA);
+    @DisplayName("Una pregunta archivada no puede volver a otro estado")
+    void shouldRejectReactivatingArchivedQuestion() {
+        Question question = newQuestion(QuestionState.ARCHIVADA);
 
         assertThrows(IllegalStateException.class,
                 () -> question.changeState(QuestionState.BORRADOR));
-        assertEquals(QuestionState.ELIMINADA, question.getState());
+        assertEquals(QuestionState.ARCHIVADA, question.getState());
+    }
+
+    @Test
+    @DisplayName("Se permite recorrer el ciclo de vida completo paso a paso")
+    void shouldAllowFullLifecycle() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+
+        question.changeState(QuestionState.PENDIENTE_REVISION);
+        question.changeState(QuestionState.EN_REVISION);
+        question.changeState(QuestionState.APROBADA);
+        question.changeState(QuestionState.PUBLICADA);
+        question.changeState(QuestionState.ARCHIVADA);
+
+        assertEquals(QuestionState.ARCHIVADA, question.getState());
+        assertTrue(question.getState().isFinal());
+    }
+
+    @Test
+    @DisplayName("Se rechazan las transiciones no definidas en la maquina de estados")
+    void shouldRejectInvalidTransitions() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+
+        assertThrows(IllegalStateException.class,
+                () -> question.changeState(QuestionState.APROBADA));
+        question.changeState(QuestionState.PENDIENTE_REVISION);
+        assertThrows(IllegalStateException.class,
+                () -> question.changeState(QuestionState.PUBLICADA));
+        assertEquals(QuestionState.PENDIENTE_REVISION, question.getState());
+    }
+
+    @Test
+    @DisplayName("Pasar al mismo estado es una operacion sin efecto")
+    void shouldTreatSameStateAsNoOp() {
+        Question question = newQuestion(QuestionState.BORRADOR);
+
+        question.changeState(QuestionState.BORRADOR);
+
+        assertEquals(QuestionState.BORRADOR, question.getState());
     }
 
     @Test
@@ -100,7 +139,7 @@ class QuestionTest {
     void shouldCompareById() {
         Question one = newQuestion(QuestionState.BORRADOR);
         Question same = new Question("P-001", "Otro nombre", "Otro enunciado",
-                options(), QuestionState.ELIMINADA);
+                options(), QuestionState.ARCHIVADA);
         Question other = new Question("P-002", "Nombre", "Enunciado",
                 options(), QuestionState.BORRADOR);
 

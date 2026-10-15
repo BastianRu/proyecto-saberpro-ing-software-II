@@ -1,8 +1,16 @@
 /* Paleta categorica: un color fijo por estado (en el orden de QuestionState). */
 .default-color0.chart-pie { -fx-pie-color: #2A78D6; }   /* Borrador */
-.default-color1.chart-pie { -fx-pie-color: #EB6834; }   /* Pendiente de revision */
-.default-color2.chart-pie { -fx-pie-color: #1BAF7A; }   /* Eliminada */
+.default-color1.chart-pie { -fx-pie-color: #EB6834; }   /* Pendiente de revisión */
+.default-color2.chart-pie { -fx-pie-color: #1BAF7A; }   /* En revisión */
+.default-color3.chart-pie { -fx-pie-color: #7B61C9; }   /* Aprobada */
+.default-color4.chart-pie { -fx-pie-color: #D64545; }   /* Rechazada */
+.default-color5.chart-pie { -fx-pie-color: #E0A300; }   /* Publicada */
+.default-color6.chart-pie { -fx-pie-color: #6B7280; }   /* Archivada */
 
 .default-color0.pie-legend-symbol { -fx-background-color: #2A78D6; }
 .default-color1.pie-legend-symbol { -fx-background-color: #EB6834; }
 .default-color2.pie-legend-symbol { -fx-background-color: #1BAF7A; }
+.default-color3.pie-legend-symbol { -fx-background-color: #7B61C9; }
+.default-color4.pie-legend-symbol { -fx-background-color: #D64545; }
+.default-color5.pie-legend-symbol { -fx-background-color: #E0A300; }
+.default-color6.pie-legend-symbol { -fx-background-color: #6B7280; }

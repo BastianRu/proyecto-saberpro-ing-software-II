@@ -21,11 +21,13 @@ principios SOLID, con Inversión de Dependencias como eje central
 
 Desde el menú principal, los roles `ADMINISTRADOR`, `AUTOR_PREGUNTAS` y `REVISOR`
 abren el *Banco de preguntas*: se selecciona una pregunta, se cargan sus datos
-(Id, Nombre, Pregunta, Opciones, Respuesta correcta, Estado) y se cambia su estado
-entre *Borrador*, *Pendiente de revisión* y *Eliminada* (una pregunta eliminada no
-puede reactivarse). Cada cambio notifica automáticamente a dos vistas
-observadoras: el conteo de preguntas por estado y una gráfica en pastel con los
-porcentajes.
+(Id, Nombre, Pregunta, Opciones, Respuesta correcta, Estado e historial de estados)
+y se cambia su estado dentro de las transiciones válidas de la máquina de estados
+(*Borrador*, *Pendiente de revisión*, *En revisión*, *Aprobada*, *Rechazada*,
+*Publicada* y *Archivada*; una pregunta archivada no se puede reactivar y no hay
+borrado físico). Cada cambio se registra en el historial con el usuario y la fecha,
+y notifica automáticamente a dos vistas observadoras: el conteo de preguntas por
+estado y una gráfica en pastel con los porcentajes.
 
 | Rol MVC | Clase |
 |---|---|
@@ -111,14 +113,21 @@ mvn test
 ```
 
 Cubren `User`, `PasswordPolicy` y `UserService` (con repositorio y hasher
-falsos), y en el banco de preguntas: `Question`, `QuestionDistractors`,
-`QuestionStatistics`, `Subject`, `QuestionService` (con `FakeQuestionRepository`
-y notificación a los observadores), `QuestionController` (con un servicio falso)
-y `SQLiteQuestionRepository` (sobre SQLite en memoria).
+falsos), y en el banco de preguntas: `Question`, `QuestionState`,
+`QuestionDistractors`, `QuestionStatistics`, `Subject`, `QuestionService` (con
+`FakeQuestionRepository` y notificación a los observadores), `QuestionController`
+(con un servicio falso) y `SQLiteQuestionRepository` (sobre SQLite en memoria,
+incluida la persistencia del historial de estados).
 
 Para HE 3 hay una clase de prueba por filtro (`ContextFilterTest`,
 `DirectQuestionFilterTest`, `DistractorCountFilterTest`,
 `ForbiddenExpressionFilterTest`, `DistractorFormatFilterTest`,
 `CorrectAnswerFilterTest`) y `QuestionPipelineTest`, que valida la tubería de
 punta a punta.
+
+La mayoría de las pruebas usan dobles escritos a mano; además, Mockito genera
+dobles sobre las abstracciones en `QuestionServiceMockitoTest` (`IQuestionRepository`:
+interacciones, `ArgumentCaptor` de la auditoría y transición inválida) y en
+`QuestionControllerMockitoTest` (`IQuestionService`: delegación de listar, buscar,
+crear, modificar, consultar, cambiar estado, historial y estadísticas).
 

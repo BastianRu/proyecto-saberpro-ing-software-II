@@ -62,6 +62,16 @@ public final class DatabaseConnection{
     "difficulty TEXT NOT NULL DEFAULT ''" +
     ");";
 
+    // HU04-01: historial de cambios de estado (usuario y fecha) para auditoria.
+    String stateHistorySql = "CREATE TABLE IF NOT EXISTS question_state_history(" +
+    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+    "question_id TEXT NOT NULL," +
+    "from_state TEXT," +
+    "to_state TEXT NOT NULL," +
+    "username TEXT NOT NULL DEFAULT 'sistema'," +
+    "changed_at TEXT NOT NULL" +
+    ");";
+
     String optionsSql = "CREATE TABLE IF NOT EXISTS question_options(" +
     "question_id TEXT NOT NULL REFERENCES questions(id)," +
     "position INTEGER NOT NULL," +
@@ -73,6 +83,7 @@ public final class DatabaseConnection{
       stmt.execute(sql);
       stmt.execute(questionsSql);
       stmt.execute(optionsSql);
+      stmt.execute(stateHistorySql);
     }
 
     addMissingQuestionColumns(connection);

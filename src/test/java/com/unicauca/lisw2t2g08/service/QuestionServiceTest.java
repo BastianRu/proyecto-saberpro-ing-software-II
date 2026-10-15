@@ -3,6 +3,7 @@ package com.unicauca.lisw2t2g08.service;
 import com.unicauca.lisw2t2g08.domain.Question;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 import com.unicauca.lisw2t2g08.domain.QuestionStatistics;
 import com.unicauca.lisw2t2g08.infra.Observer;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,7 +50,7 @@ class QuestionServiceTest {
         repository.save(question("P-001", QuestionState.BORRADOR));
         repository.save(question("P-002", QuestionState.BORRADOR));
         repository.save(question("P-003", QuestionState.PENDIENTE_REVISION));
-        repository.save(question("P-004", QuestionState.ELIMINADA));
+        repository.save(question("P-004", QuestionState.ARCHIVADA));
     }
 
     private Question question(String id, QuestionState state) {
@@ -84,7 +86,7 @@ class QuestionServiceTest {
 
         assertEquals(2, stats.getCount(QuestionState.BORRADOR));
         assertEquals(1, stats.getCount(QuestionState.PENDIENTE_REVISION));
-        assertEquals(1, stats.getCount(QuestionState.ELIMINADA));
+        assertEquals(1, stats.getCount(QuestionState.ARCHIVADA));
         assertEquals(4, stats.getTotal());
     }
 
@@ -101,11 +103,11 @@ class QuestionServiceTest {
     @Test
     @DisplayName("No cambia el estado de una pregunta inexistente")
     void shouldNotChangeStateOfUnknownQuestion() {
-        assertFalse(service.changeState("P-999", QuestionState.ELIMINADA));
+        assertFalse(service.changeState("P-999", QuestionState.ARCHIVADA));
     }
 
     @Test
-    @DisplayName("Propaga la regla que impide reactivar una pregunta eliminada")
+    @DisplayName("Propaga la regla que impide cambiar el estado de una pregunta archivada")
     void shouldPropagateInvalidTransition() {
         assertThrows(IllegalStateException.class,
                 () -> service.changeState("P-004", QuestionState.BORRADOR));
@@ -119,12 +121,56 @@ class QuestionServiceTest {
         service.addObserver(first);
         service.addObserver(second);
 
-        service.changeState("P-001", QuestionState.ELIMINADA);
+        service.changeState("P-001", QuestionState.PENDIENTE_REVISION);
 
         assertEquals(1, first.calls);
         assertEquals(1, second.calls);
         assertEquals(1, first.lastStatistics.getCount(QuestionState.BORRADOR));
-        assertEquals(2, second.lastStatistics.getCount(QuestionState.ELIMINADA));
+        assertEquals(2, second.lastStatistics.getCount(QuestionState.PENDIENTE_REVISION));
+    }
+
+    @Test
+    @DisplayName("El cambio de estado queda en el historial con el usuario y la fecha")
+    void shouldRecordStateChangeInHistory() {
+        service.changeState("P-001", QuestionState.PENDIENTE_REVISION, "juan");
+
+        List<QuestionStateChange> history = service.stateHistory("P-001");
+        assertEquals(1, history.size());
+        assertEquals(QuestionState.BORRADOR, history.get(0).getFromState());
+        assertEquals(QuestionState.PENDIENTE_REVISION, history.get(0).getToState());
+        assertEquals("juan", history.get(0).getUsername());
+        assertNotNull(history.get(0).getChangedAt());
+    }
+
+    @Test
+    @DisplayName("Sin usuario explicito el cambio se registra como sistema")
+    void shouldUseSystemUserWhenUsernameMissing() {
+        service.changeState("P-001", QuestionState.PENDIENTE_REVISION);
+
+        assertEquals("sistema", service.stateHistory("P-001").get(0).getUsername());
+    }
+
+    @Test
+    @DisplayName("Una transicion invalida no deja registro en el historial")
+    void shouldNotRecordInvalidTransition() {
+        assertThrows(IllegalStateException.class,
+                () -> service.changeState("P-001", QuestionState.PUBLICADA, "juan"));
+        assertTrue(service.stateHistory("P-001").isEmpty());
+    }
+
+    @Test
+    @DisplayName("No registra un cambio cuando el estado ya es el indicado")
+    void shouldNotRecordWhenStateIsUnchanged() {
+        service.changeState("P-001", QuestionState.BORRADOR, "juan");
+
+        assertTrue(service.stateHistory("P-001").isEmpty());
+    }
+
+    @Test
+    @DisplayName("El historial de una pregunta inexistente esta vacio")
+    void shouldReturnEmptyHistoryForUnknownQuestion() {
+        assertTrue(service.stateHistory("P-999").isEmpty());
+        assertTrue(service.stateHistory(null).isEmpty());
     }
 
     @Test
@@ -133,7 +179,7 @@ class QuestionServiceTest {
         SpyObserver observer = new SpyObserver();
         service.addObserver(observer);
 
-        service.changeState("P-999", QuestionState.ELIMINADA);
+        service.changeState("P-999", QuestionState.ARCHIVADA);
 
         assertEquals(0, observer.calls);
     }

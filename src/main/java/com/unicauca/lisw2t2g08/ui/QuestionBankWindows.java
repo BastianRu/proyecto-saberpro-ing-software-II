@@ -1,5 +1,6 @@
 package com.unicauca.lisw2t2g08.ui;
 
+import com.unicauca.lisw2t2g08.domain.User;
 import com.unicauca.lisw2t2g08.infra.Subject;
 
 import javafx.stage.Stage;
@@ -21,6 +22,9 @@ public class QuestionBankWindows {
     private QuestionStatisticsView statisticsView;
     private QuestionChartView chartView;
 
+    /** Usuario con sesión iniciada, usado para auditar los cambios de estado. */
+    private User currentUser;
+
     /**
      * @param controller controlador del MVC usado por la vista principal.
      * @param subject    sujeto observable que notifica los cambios de estado.
@@ -28,6 +32,16 @@ public class QuestionBankWindows {
     public QuestionBankWindows(QuestionController controller, Subject subject) {
         this.controller = controller;
         this.subject = subject;
+    }
+
+    /**
+     * Establece el usuario de la sesión activa para que los cambios de estado
+     * queden registrados a su nombre en el historial (HU04-01).
+     *
+     * @param currentUser usuario que inició sesión; puede ser null.
+     */
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
     }
 
     /**
@@ -42,6 +56,7 @@ public class QuestionBankWindows {
             subject.addObserver(statisticsView);
             subject.addObserver(chartView);
         }
+        managementView.setCurrentUser(currentUser);
 
         // Primer render (o refresco) con el estado actual del banco de preguntas
         managementView.reload();

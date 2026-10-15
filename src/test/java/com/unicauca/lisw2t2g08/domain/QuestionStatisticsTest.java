@@ -13,11 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class QuestionStatisticsTest {
 
-    private QuestionStatistics statistics(int borrador, int pendiente, int eliminada) {
+    private QuestionStatistics statistics(int borrador, int pendiente, int archivada) {
         Map<QuestionState, Integer> counts = new EnumMap<>(QuestionState.class);
         counts.put(QuestionState.BORRADOR, borrador);
         counts.put(QuestionState.PENDIENTE_REVISION, pendiente);
-        counts.put(QuestionState.ELIMINADA, eliminada);
+        counts.put(QuestionState.ARCHIVADA, archivada);
         return new QuestionStatistics(counts);
     }
 
@@ -34,7 +34,7 @@ class QuestionStatisticsTest {
 
         assertEquals(50.0, stats.getPercentage(QuestionState.BORRADOR), 0.0001);
         assertEquals(30.0, stats.getPercentage(QuestionState.PENDIENTE_REVISION), 0.0001);
-        assertEquals(20.0, stats.getPercentage(QuestionState.ELIMINADA), 0.0001);
+        assertEquals(20.0, stats.getPercentage(QuestionState.ARCHIVADA), 0.0001);
     }
 
     @Test
@@ -58,7 +58,7 @@ class QuestionStatisticsTest {
         QuestionStatistics stats = new QuestionStatistics(counts);
 
         assertEquals(4, stats.getTotal());
-        assertEquals(0, stats.getCount(QuestionState.ELIMINADA));
+        assertEquals(0, stats.getCount(QuestionState.ARCHIVADA));
         assertEquals(QuestionState.values().length, stats.asMap().size());
     }
 

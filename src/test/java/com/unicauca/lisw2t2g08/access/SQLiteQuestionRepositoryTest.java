@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +19,7 @@ import com.unicauca.lisw2t2g08.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.domain.Question;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
+import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
 
 /**
  * Pruebas del repositorio SQLite de preguntas sobre una base de datos en
@@ -80,13 +82,13 @@ class SQLiteQuestionRepositoryTest {
     void shouldUpdateExistingQuestion() {
         repository.save(question("P-100"));
         Question stored = repository.findById("P-100").orElseThrow();
-        stored.changeState(QuestionState.ELIMINADA);
+        stored.changeState(QuestionState.PENDIENTE_REVISION);
         stored.setDistractors(new QuestionDistractors(List.of("Si", "No"), 0));
 
         assertTrue(repository.update(stored));
 
         Question updated = repository.findById("P-100").orElseThrow();
-        assertEquals(QuestionState.ELIMINADA, updated.getState());
+        assertEquals(QuestionState.PENDIENTE_REVISION, updated.getState());
         assertEquals(List.of("Si", "No"), updated.getDistractors().getOptions());
         assertEquals("Si", updated.getCorrectAnswer());
     }
@@ -120,13 +122,13 @@ class SQLiteQuestionRepositoryTest {
         assertEquals(8, sampleSize);
 
         repository.findById("P-001").ifPresent(q -> {
-            q.changeState(QuestionState.ELIMINADA);
+            q.changeState(QuestionState.PENDIENTE_REVISION);
             repository.update(q);
         });
         QuestionSampleData.loadIfEmpty(repository);
 
         assertEquals(sampleSize, repository.findAll().size());
-        assertEquals(QuestionState.ELIMINADA, repository.findById("P-001").orElseThrow().getState());
+        assertEquals(QuestionState.PENDIENTE_REVISION, repository.findById("P-001").orElseThrow().getState());
     }
 
     @Test
@@ -171,5 +173,22 @@ class SQLiteQuestionRepositoryTest {
             assertEquals("", stored.getContext());
             assertEquals(null, stored.getDifficulty());
         }
+    }
+
+    @Test
+    @DisplayName("Guarda y consulta el historial de cambios de estado")
+    void shouldPersistStateHistory() {
+        repository.save(question("P-300"));
+        repository.saveStateChange(new QuestionStateChange("P-300", QuestionState.BORRADOR,
+                QuestionState.PENDIENTE_REVISION, "juan", LocalDateTime.now()));
+
+        List<QuestionStateChange> history = repository.findStateHistory("P-300");
+
+        assertEquals(1, history.size());
+        assertEquals(QuestionState.BORRADOR, history.get(0).getFromState());
+        assertEquals(QuestionState.PENDIENTE_REVISION, history.get(0).getToState());
+        assertEquals("juan", history.get(0).getUsername());
+        assertTrue(repository.findStateHistory("NO-EXISTE").isEmpty());
+        assertTrue(repository.findStateHistory(null).isEmpty());
     }
 }

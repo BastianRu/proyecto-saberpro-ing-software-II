@@ -52,7 +52,7 @@ public class QuestionStatisticsView implements Observer {
 
         VBox layout = new VBox(12, title, grid);
         layout.setPadding(new Insets(20));
-        return new Scene(layout, 320, 220);
+        return new Scene(layout, 320, 300);
     }
 
     /**

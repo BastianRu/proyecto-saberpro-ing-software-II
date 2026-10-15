@@ -58,7 +58,10 @@ public class MainMenuView {
 
     if (canManageQuestions(user.getRole())) {
       Button questionBankButton = new Button("Banco de preguntas");
-      questionBankButton.setOnAction(e -> questionBank.show());
+      questionBankButton.setOnAction(e -> {
+        questionBank.setCurrentUser(user);
+        questionBank.show();
+      });
       layout.getChildren().add(questionBankButton);
     }
 

@@ -175,19 +175,24 @@ public class Question {
     }
 
     /**
-     * Regla de negocio: una pregunta eliminada no se puede reactivar y el nuevo
-     * estado no puede ser nulo.
+     * Regla de negocio: solo se permiten las transiciones definidas en la
+     * maquina de estados del ciclo de vida (HU04-02) y el nuevo estado no puede
+     * ser nulo. Pasar al mismo estado se acepta como una operacion sin efecto.
      *
      * @param newState estado al que se quiere mover la pregunta.
      * @throws IllegalArgumentException si el estado es nulo.
-     * @throws IllegalStateException    si la pregunta ya fue eliminada.
+     * @throws IllegalStateException    si la transicion no es valida.
      */
     public void changeState(QuestionState newState) {
         if (newState == null) {
             throw new IllegalArgumentException("El nuevo estado es obligatorio");
         }
-        if (this.state == QuestionState.ELIMINADA && newState != QuestionState.ELIMINADA) {
-            throw new IllegalStateException("Una pregunta eliminada no puede cambiar de estado");
+        if (newState == this.state) {
+            return;
+        }
+        if (!state.canTransitionTo(newState)) {
+            throw new IllegalStateException("Transicion no permitida de "
+                    + state.getLabel() + " a " + newState.getLabel());
         }
         this.state = newState;
     }
