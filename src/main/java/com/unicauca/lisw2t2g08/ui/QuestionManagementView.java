@@ -9,7 +9,7 @@ import com.unicauca.lisw2t2g08.domain.QuestionCriteria;
 import com.unicauca.lisw2t2g08.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.domain.QuestionState;
 import com.unicauca.lisw2t2g08.domain.QuestionStateChange;
-import com.unicauca.lisw2t2g08.domain.User;
+import com.unicauca.lisw2t2g08.domain.Session;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -83,7 +83,7 @@ public class QuestionManagementView {
      *
      * @param user usuario que inicio sesion; puede ser null.
      */
-    public void setCurrentUser(User user) {
+    public void setCurrentUser(Session user) {
         this.username = (user == null || user.getLogin() == null || user.getLogin().isBlank())
                 ? "sistema" : user.getLogin();
     }

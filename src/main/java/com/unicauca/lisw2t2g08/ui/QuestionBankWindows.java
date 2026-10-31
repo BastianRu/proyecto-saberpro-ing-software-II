@@ -1,6 +1,6 @@
 package com.unicauca.lisw2t2g08.ui;
 
-import com.unicauca.lisw2t2g08.domain.User;
+import com.unicauca.lisw2t2g08.domain.Session;
 import com.unicauca.lisw2t2g08.infra.Subject;
 
 import javafx.stage.Stage;
@@ -23,7 +23,7 @@ public class QuestionBankWindows {
     private QuestionChartView chartView;
 
     /** Usuario con sesión iniciada, usado para auditar los cambios de estado. */
-    private User currentUser;
+    private Session currentUser;
 
     /**
      * @param controller controlador del MVC usado por la vista principal.
@@ -40,7 +40,7 @@ public class QuestionBankWindows {
      *
      * @param currentUser usuario que inició sesión; puede ser null.
      */
-    public void setCurrentUser(User currentUser) {
+    public void setCurrentUser(Session currentUser) {
         this.currentUser = currentUser;
     }
 
