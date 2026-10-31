@@ -12,7 +12,7 @@ public final class DatabaseConnection{
 
 
 
-  private static final String DB_URL = "jdbc:sqlite:taller2.db";
+  private static final String DB_URL = "jdbc:sqlite:bd.db";
   private static Connection connection = null;
 
 
