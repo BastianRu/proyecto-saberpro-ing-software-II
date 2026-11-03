@@ -1,0 +1,90 @@
+{
+  "info": {
+    "name": "validacion-service",
+    "description": "Coleccion de ejemplo del microservicio de Validacion Estructural (HU03).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Borrador valido (200)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ventaja del patron Pipeline\",\n  \"context\": \"El patron Pipeline encadena filtros que procesan datos en secuencia.\",\n  \"directQuestion\": \"Cual es la ventaja principal de este patron?\",\n  \"options\": [\n    \"Permite componer validaciones independientes\",\n    \"Obliga a reescribir todo el sistema\",\n    \"Elimina la necesidad de pruebas\",\n    \"Impide reutilizar componentes\",\n    \"Requiere una base de datos distribuida\"\n  ],\n  \"correctIndex\": 0,\n  \"justification\": \"El patron permite componer validaciones independientes.\",\n  \"bibliography\": \"Gamma et al. Design Patterns.\",\n  \"competence\": \"Diseno de software\",\n  \"topic\": \"Patrones de diseno\",\n  \"subtopic\": \"Pipeline\",\n  \"difficulty\": \"MEDIA\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8083/validaciones",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8083",
+          "path": [
+            "validaciones"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Expresion prohibida (422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ventaja del patron Pipeline\",\n  \"context\": \"El patron Pipeline encadena filtros que procesan datos en secuencia.\",\n  \"directQuestion\": \"Cual es la ventaja principal de este patron?\",\n  \"options\": [\n    \"Permite componer validaciones independientes\",\n    \"Obliga a reescribir todo el sistema\",\n    \"Elimina la necesidad de pruebas\",\n    \"Impide reutilizar componentes\",\n    \"Todas las anteriores\"\n  ],\n  \"correctIndex\": 0,\n  \"justification\": \"El patron permite componer validaciones independientes.\",\n  \"bibliography\": \"Gamma et al. Design Patterns.\",\n  \"competence\": \"Diseno de software\",\n  \"topic\": \"Patrones de diseno\",\n  \"subtopic\": \"Pipeline\",\n  \"difficulty\": \"MEDIA\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8083/validaciones",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8083",
+          "path": [
+            "validaciones"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Dificultad desconocida (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "\"{\\\"difficulty\\\": \\\"EXPERTO\\\"}\""
+        },
+        "url": {
+          "raw": "http://localhost:8083/validaciones",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8083",
+          "path": [
+            "validaciones"
+          ]
+        }
+      }
+    }
+  ]
+}
