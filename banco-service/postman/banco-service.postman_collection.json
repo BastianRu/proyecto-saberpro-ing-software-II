@@ -1,0 +1,126 @@
+{
+  "info": {
+    "name": "banco-service",
+    "_postman_id": "banco-service-collection",
+    "description": "Coleccion de peticiones para el microservicio de Banco de Preguntas (puerto 8082)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Listar todas las preguntas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/preguntas",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas"]
+        }
+      }
+    },
+    {
+      "name": "Filtrar preguntas por dificultad y estado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/preguntas?state=BORRADOR&difficulty=MEDIA",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas"],
+          "query": [
+            { "key": "state", "value": "BORRADOR" },
+            { "key": "difficulty", "value": "MEDIA" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Obtener pregunta por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/preguntas/P-001",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas", "P-001"]
+        }
+      }
+    },
+    {
+      "name": "Crear pregunta en Borrador",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Patron Strategy\",\n  \"context\": \"El patron Strategy permite definir una familia de algoritmos intercambiables.\",\n  \"directQuestion\": \"Cual es el proposito principal del patron Strategy?\",\n  \"options\": [\n    \"Encapsular algoritmos dentro de clases intercambiables\",\n    \"Garantizar una sola instancia de una clase\",\n    \"Adaptar la interfaz de una clase a otra esperada\",\n    \"Notificar cambios a multiples observadores\",\n    \"Construir objetos complejos paso a paso\"\n  ],\n  \"correctIndex\": 0,\n  \"justification\": \"Strategy encapsula algoritmos y permite intercambiarlos en tiempo de ejecucion.\",\n  \"bibliography\": \"Gamma et al. Design Patterns.\",\n  \"competence\": \"Diseno de software\",\n  \"topic\": \"Patrones de diseno\",\n  \"subtopic\": \"Strategy\",\n  \"difficulty\": \"MEDIA\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/preguntas",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas"]
+        }
+      }
+    },
+    {
+      "name": "Cambiar estado de una pregunta",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"state\": \"PENDIENTE_REVISION\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8082/preguntas/P-001/estado",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas", "P-001", "estado"]
+        }
+      }
+    },
+    {
+      "name": "Consultar historial de auditoria",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/preguntas/P-001/historial",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas", "P-001", "historial"]
+        }
+      }
+    },
+    {
+      "name": "Obtener estadisticas del banco",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8082/preguntas/estadisticas",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8082",
+          "path": ["preguntas", "estadisticas"]
+        }
+      }
+    }
+  ]
+}

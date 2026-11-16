@@ -1,0 +1,251 @@
+package com.unicauca.lisw2t2g08.banco.access;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import com.unicauca.lisw2t2g08.banco.domain.DifficultyLevel;
+import com.unicauca.lisw2t2g08.banco.domain.Question;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionDistractors;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStateChange;
+
+/**
+ * Implementacion de IQuestionRepository usando JDBC para SQLite.
+ */
+public class SQLiteQuestionRepository implements IQuestionRepository {
+
+    private final Connection connection;
+
+    public SQLiteQuestionRepository(Connection connection) {
+        this.connection = connection;
+    }
+
+    @Override
+    public synchronized List<Question> findAll() {
+        String sql = "SELECT * FROM questions ORDER BY id";
+        List<Question> questions = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                questions.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener todas las preguntas", e);
+        }
+        return questions;
+    }
+
+    @Override
+    public synchronized Optional<Question> findById(String id) {
+        if (id == null) {
+            return Optional.empty();
+        }
+        String sql = "SELECT * FROM questions WHERE id = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapRow(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar la pregunta: " + id, e);
+        }
+    }
+
+    @Override
+    public synchronized boolean save(Question question) {
+        if (question == null || findById(question.getId()).isPresent()) {
+            return false;
+        }
+        String sql = "INSERT INTO questions (id, name, statement, correct_index, state,"
+                + " context, justification, bibliography, competence, topic, subtopic, difficulty)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        inTransaction(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, question.getId());
+                ps.setString(2, question.getName());
+                ps.setString(3, question.getStatement());
+                ps.setInt(4, question.getDistractors().getCorrectIndex());
+                ps.setString(5, question.getState().name());
+                bindContent(ps, 6, question);
+                ps.executeUpdate();
+            }
+            insertOptions(question);
+        }, "Error al guardar la pregunta: " + question.getId());
+        return true;
+    }
+
+    @Override
+    public synchronized boolean update(Question question) {
+        if (question == null) {
+            return false;
+        }
+        String sql = "UPDATE questions SET name = ?, statement = ?, correct_index = ?, state = ?,"
+                + " context = ?, justification = ?, bibliography = ?, competence = ?,"
+                + " topic = ?, subtopic = ?, difficulty = ? WHERE id = ?";
+        boolean[] updated = {false};
+        inTransaction(() -> {
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, question.getName());
+                ps.setString(2, question.getStatement());
+                ps.setInt(3, question.getDistractors().getCorrectIndex());
+                ps.setString(4, question.getState().name());
+                bindContent(ps, 5, question);
+                ps.setString(12, question.getId());
+                updated[0] = ps.executeUpdate() > 0;
+            }
+            if (updated[0]) {
+                deleteOptions(question.getId());
+                insertOptions(question);
+            }
+        }, "Error al actualizar la pregunta: " + question.getId());
+        return updated[0];
+    }
+
+    @Override
+    public synchronized void saveStateChange(QuestionStateChange change) {
+        if (change == null) {
+            return;
+        }
+        String sql = "INSERT INTO question_state_history (question_id, from_state, to_state,"
+                + " username, changed_at) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, change.getQuestionId());
+            ps.setString(2, change.getFromState() == null ? null : change.getFromState().name());
+            ps.setString(3, change.getToState().name());
+            ps.setString(4, change.getUsername());
+            ps.setString(5, change.getChangedAt().toString());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al registrar el cambio de estado de la pregunta: "
+                    + change.getQuestionId(), e);
+        }
+    }
+
+    @Override
+    public synchronized List<QuestionStateChange> findStateHistory(String questionId) {
+        if (questionId == null) {
+            return List.of();
+        }
+        String sql = "SELECT question_id, from_state, to_state, username, changed_at"
+                + " FROM question_state_history WHERE question_id = ? ORDER BY id";
+        List<QuestionStateChange> history = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    history.add(mapStateChangeRow(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al consultar el historial de la pregunta: "
+                    + questionId, e);
+        }
+        return history;
+    }
+
+    private QuestionStateChange mapStateChangeRow(ResultSet rs) throws SQLException {
+        String from = rs.getString("from_state");
+        return new QuestionStateChange(
+                rs.getString("question_id"),
+                from == null ? null : QuestionState.valueOf(from),
+                QuestionState.valueOf(rs.getString("to_state")),
+                rs.getString("username"),
+                LocalDateTime.parse(rs.getString("changed_at")));
+    }
+
+    private void bindContent(PreparedStatement ps, int first, Question question) throws SQLException {
+        ps.setString(first, question.getContext());
+        ps.setString(first + 1, question.getJustification());
+        ps.setString(first + 2, question.getBibliography());
+        ps.setString(first + 3, question.getCompetence());
+        ps.setString(first + 4, question.getTopic());
+        ps.setString(first + 5, question.getSubtopic());
+        ps.setString(first + 6, question.getDifficulty() == null ? "" : question.getDifficulty().name());
+    }
+
+    private void insertOptions(Question question) throws SQLException {
+        String sql = "INSERT INTO question_options (question_id, position, text) VALUES (?, ?, ?)";
+        List<String> options = question.getDistractors().getOptions();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            for (int i = 0; i < options.size(); i++) {
+                ps.setString(1, question.getId());
+                ps.setInt(2, i);
+                ps.setString(3, options.get(i));
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    private void deleteOptions(String questionId) throws SQLException {
+        try (PreparedStatement ps = connection.prepareStatement(
+                "DELETE FROM question_options WHERE question_id = ?")) {
+            ps.setString(1, questionId);
+            ps.executeUpdate();
+        }
+    }
+
+    private List<String> findOptions(String questionId) throws SQLException {
+        String sql = "SELECT text FROM question_options WHERE question_id = ? ORDER BY position";
+        List<String> options = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    options.add(rs.getString("text"));
+                }
+            }
+        }
+        return options;
+    }
+
+    private Question mapRow(ResultSet rs) throws SQLException {
+        String id = rs.getString("id");
+        String difficulty = rs.getString("difficulty");
+        return new Question(
+                id,
+                rs.getString("name"),
+                rs.getString("context"),
+                rs.getString("statement"),
+                new QuestionDistractors(findOptions(id), rs.getInt("correct_index")),
+                rs.getString("justification"),
+                rs.getString("bibliography"),
+                rs.getString("competence"),
+                rs.getString("topic"),
+                rs.getString("subtopic"),
+                (difficulty == null || difficulty.isBlank()) ? null : DifficultyLevel.valueOf(difficulty),
+                QuestionState.valueOf(rs.getString("state")));
+    }
+
+    private void inTransaction(SqlWork work, String errorMessage) {
+        try {
+            boolean previousAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                work.run();
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(previousAutoCommit);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(errorMessage, e);
+        }
+    }
+
+    @FunctionalInterface
+    private interface SqlWork {
+        void run() throws SQLException;
+    }
+}
