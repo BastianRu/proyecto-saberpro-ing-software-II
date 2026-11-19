@@ -1,0 +1,102 @@
+{
+  "info": {
+    "name": "auth-service",
+    "_postman_id": "auth-service-collection",
+    "description": "Coleccion de peticiones para el microservicio de Usuarios y Autenticacion (puerto 8081)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Registrar usuario",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"login\": \"ana\",\n  \"fullName\": \"Ana Perez\",\n  \"role\": \"AUTOR_PREGUNTAS\",\n  \"password\": \"Clave123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/usuarios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "usuarios"
+          ],
+          "port": "8081"
+        }
+      }
+    },
+    {
+      "name": "Iniciar sesion",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const body = pm.response.json();",
+              "if (body.token) {",
+              "    pm.collectionVariables.set('token', body.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"login\": \"ana\",\n  \"password\": \"Clave123!\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8081/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "login"
+          ],
+          "port": "8081"
+        }
+      }
+    },
+    {
+      "name": "Listar usuarios",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/usuarios",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "path": [
+            "usuarios"
+          ],
+          "port": "8081"
+        }
+      }
+    }
+  ]
+}
