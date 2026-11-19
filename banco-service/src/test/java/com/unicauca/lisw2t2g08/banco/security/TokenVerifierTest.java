@@ -24,6 +24,14 @@ class TokenVerifierTest {
     private static final String SECRET = "0123456789abcdef0123456789abcdef";
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
+    // Vector de contrato compartido con auth-service (TokenSignerTest).
+    // Se genero con HMAC-SHA256 sobre "ana|ADMINISTRADOR|2026-11-04T13:00"
+    // y el mismo secreto. Cambiar el formato en cualquiera de los dos lados
+    // debe romper esta prueba.
+    private static final String FIXED_TOKEN =
+            "YW5hfEFETUlOSVNUUkFET1J8MjAyNi0xMS0wNFQxMzowMA"
+            + ".qv9ZN9sRkJ-MC4DwFLI-x-DKWD2IO0InnEnl8Cu-yiQ";
+
     private Clock fixedClock;
     private TokenVerifier verifier;
 
@@ -84,6 +92,18 @@ class TokenVerifierTest {
         assertTrue(verifier.verify("").isEmpty());
         assertTrue(verifier.verify("sin_punto").isEmpty());
         assertTrue(verifier.verify("a.b.c").isEmpty());
+    }
+
+    @Test
+    void verify_tokenDelVectorDeContratoCompartido_returnsAuthToken() {
+        Clock clock = Clock.fixed(Instant.parse("2026-11-04T12:00:00Z"), ZoneId.of("UTC"));
+        TokenVerifier contractVerifier = new TokenVerifier(SECRET, clock);
+
+        AuthToken token = contractVerifier.verify(FIXED_TOKEN).orElseThrow();
+
+        assertEquals("ana", token.getSubject());
+        assertEquals(Role.ADMINISTRADOR, token.getRole());
+        assertEquals(LocalDateTime.parse("2026-11-04T13:00"), token.getExpiresAt());
     }
 
     private String createToken(String subject, Role role, LocalDateTime expiresAt, String secretKey) {
