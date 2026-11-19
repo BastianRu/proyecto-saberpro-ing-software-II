@@ -1,7 +1,16 @@
 # Proyecto Banco de Preguntas Pruebas Saber Pro
 
-Aplicación de escritorio en Java (JavaFX + SQLite) construida siguiendo los
-principios SOLID, con Inversión de Dependencias como eje central
+> **Aviso de vigencia:** la carpeta `src/` contiene la **primera iteración**
+> (monolito de escritorio JavaFX + SQLite) y se conserva como legado histórico.
+> La arquitectura vigente de la **segunda iteración** son los microservicios
+> `auth-service` (8081), `banco-service` (8082) y `validacion-service` (8083),
+> cada uno con su propio `pom.xml`. Para levantarlos, ver
+> [`docs/EJECUCION.md`](docs/EJECUCION.md). Los servicios no dependen del código
+> de `src/`.
+
+La primera iteración es una aplicación de escritorio en Java (JavaFX + SQLite)
+construida siguiendo los principios SOLID, con Inversión de Dependencias como
+eje central.
 
 ## Historia de usuario implementada
 
