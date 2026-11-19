@@ -152,4 +152,4 @@ mvn javafx:run                              # cliente de escritorio (login contr
 ```
 
 Cada servicio tiene su `README.md`. La colección `postman/saberpro-microservicios.postman_collection.json` recorre el flujo completo.
-El detalle del diseño está en `CONTEXTO_PROYECTO.md`.
+El detalle del diseño está en `CONTEXTO_PROYECTO.md`; las decisiones, contratos y limitaciones, en `docs/decisiones-iteracion-2.md`.
