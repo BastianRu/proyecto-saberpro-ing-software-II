@@ -4,30 +4,25 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Clock;
 
-import org.springframework.amqp.core.TopicExchange;
-import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.unicauca.lisw2t2g08.banco.access.IQuestionRepository;
 import com.unicauca.lisw2t2g08.banco.access.QuestionSampleData;
 import com.unicauca.lisw2t2g08.banco.access.SQLiteQuestionRepository;
-import com.unicauca.lisw2t2g08.banco.client.IValidationClient;
-import com.unicauca.lisw2t2g08.banco.client.RestValidationClient;
-import com.unicauca.lisw2t2g08.banco.messaging.IQuestionEventPublisher;
-import com.unicauca.lisw2t2g08.banco.messaging.RabbitMQQuestionEventPublisher;
+import com.unicauca.lisw2t2g08.banco.events.IEventPublisher;
+import com.unicauca.lisw2t2g08.banco.events.RabbitEventPublisher;
+import com.unicauca.lisw2t2g08.banco.pipeline.QuestionPipeline;
 import com.unicauca.lisw2t2g08.banco.security.TokenVerifier;
 import com.unicauca.lisw2t2g08.banco.service.IQuestionService;
 import com.unicauca.lisw2t2g08.banco.service.QuestionService;
 
-/**
- * Configuracion y ensamblaje de dependencias para el microservicio banco-service.
- */
+/** Ensamblaje de dependencias (lo que en el monolito hacía MainApp). */
 @Configuration
 public class BancoConfig {
 
@@ -39,85 +34,68 @@ public class BancoConfig {
     }
 
     @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
+
+    @Bean
     public IQuestionRepository questionRepository(Connection connection) {
-        SQLiteQuestionRepository repository = new SQLiteQuestionRepository(connection);
-        QuestionSampleData.loadIfEmpty(repository);
-        return repository;
+        return new SQLiteQuestionRepository(connection);
+    }
+
+    // Opt-in: las preguntas de ejemplo no publican eventos (ver QuestionSampleData)
+    @Bean
+    public ApplicationRunner sampleDataLoader(IQuestionRepository repository,
+                                              @Value("${banco.sample-data.enabled:false}") boolean enabled) {
+        return args -> {
+            if (enabled) {
+                QuestionSampleData.loadIfEmpty(repository);
+            }
+        };
     }
 
     @Bean
-    public IValidationClient validationClient(@Value("${banco.validation.url}") String validationUrl) {
-        return new RestValidationClient(validationUrl);
+    public QuestionPipeline questionPipeline() {
+        return new QuestionPipeline();
     }
 
     @Bean
-    public TokenVerifier tokenVerifier(@Value("${banco.token.secret}") String secret) {
-        return new TokenVerifier(secret);
+    public IEventPublisher eventPublisher(RabbitTemplate rabbitTemplate) {
+        return new RabbitEventPublisher(rabbitTemplate);
     }
 
     @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+    public TokenVerifier tokenVerifier(@Value("${auth.token.secret}") String secret, Clock clock) {
+        return new TokenVerifier(secret, clock);
     }
 
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(jsonMessageConverter);
-        return template;
-    }
-
-    @Bean
-    public TopicExchange questionsExchange(@Value("${banco.rabbitmq.exchange}") String exchangeName) {
-        return new TopicExchange(exchangeName, true, false);
-    }
-
-    @Bean
-    public IQuestionEventPublisher eventPublisher(RabbitTemplate rabbitTemplate,
-                                                 @Value("${banco.rabbitmq.exchange}") String exchangeName) {
-        return new RabbitMQQuestionEventPublisher(rabbitTemplate, exchangeName);
-    }
-
-    @Bean
-    public IQuestionService questionService(IQuestionRepository repository,
-                                           IValidationClient validationClient,
-                                           IQuestionEventPublisher eventPublisher) {
-        return new QuestionService(repository, validationClient, eventPublisher);
+    public IQuestionService questionService(IQuestionRepository repository, QuestionPipeline pipeline,
+                                            IEventPublisher events, Clock clock) {
+        return new QuestionService(repository, pipeline, events, clock);
     }
 
     private static void initializeSchema(Connection connection) throws SQLException {
         try (Statement st = connection.createStatement()) {
-            st.execute("CREATE TABLE IF NOT EXISTS questions (" +
-                    "id TEXT PRIMARY KEY, " +
-                    "name TEXT NOT NULL, " +
-                    "statement TEXT NOT NULL, " +
-                    "context TEXT, " +
-                    "correct_index INTEGER NOT NULL, " +
-                    "state TEXT NOT NULL, " +
-                    "justification TEXT, " +
-                    "bibliography TEXT, " +
-                    "competence TEXT, " +
-                    "topic TEXT, " +
-                    "subtopic TEXT, " +
-                    "difficulty TEXT" +
+            st.execute("CREATE TABLE IF NOT EXISTS questions(" +
+                    "id TEXT PRIMARY KEY," +
+                    "name TEXT NOT NULL," +
+                    "statement TEXT NOT NULL," +
+                    "correct_index INTEGER NOT NULL," +
+                    "state TEXT NOT NULL," +
+                    "context TEXT NOT NULL DEFAULT ''," +
+                    "justification TEXT NOT NULL DEFAULT ''," +
+                    "bibliography TEXT NOT NULL DEFAULT ''," +
+                    "competence TEXT NOT NULL DEFAULT ''," +
+                    "topic TEXT NOT NULL DEFAULT ''," +
+                    "subtopic TEXT NOT NULL DEFAULT ''," +
+                    "difficulty TEXT NOT NULL DEFAULT ''" +
                     ");");
-
-            st.execute("CREATE TABLE IF NOT EXISTS question_options (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "question_id TEXT NOT NULL, " +
-                    "position INTEGER NOT NULL, " +
-                    "text TEXT NOT NULL, " +
-                    "FOREIGN KEY(question_id) REFERENCES questions(id)" +
-                    ");");
-
-            st.execute("CREATE TABLE IF NOT EXISTS question_state_history (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "question_id TEXT NOT NULL, " +
-                    "from_state TEXT, " +
-                    "to_state TEXT NOT NULL, " +
-                    "username TEXT NOT NULL, " +
-                    "changed_at TEXT NOT NULL, " +
-                    "FOREIGN KEY(question_id) REFERENCES questions(id)" +
+            st.execute("CREATE TABLE IF NOT EXISTS question_options(" +
+                    "question_id TEXT NOT NULL REFERENCES questions(id)," +
+                    "position INTEGER NOT NULL," +
+                    "text TEXT NOT NULL," +
+                    "PRIMARY KEY (question_id, position)" +
                     ");");
         }
     }

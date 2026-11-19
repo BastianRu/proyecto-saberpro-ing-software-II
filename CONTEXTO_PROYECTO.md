@@ -26,7 +26,7 @@ El proyecto está concebido en fases o iteraciones académicas estructuradas:
   • Java SE 17 + JavaFX 21                   • Spring Boot 3.3.5
   • SQLite monolítico (taller2.db)           • Descentralización de datos (Database-per-service)
   • Patrones: MVC, Observer,                 • Comunicación síncrona REST + asíncrona (RabbitMQ)
-    Pipeline, State, Inversión Dep.          • auth-service, validacion-service, banco-service
+    Pipeline, State, Inversión Dep.          • auth, banco (+validación), revisión, auditoría
 ```
 
 ### Iteración 1: Monolito en Capas y Patrones de Diseño
@@ -44,11 +44,17 @@ El proyecto está concebido en fases o iteraciones académicas estructuradas:
 ### Iteración 2: Transición a Microservicios (Rama Actual: `segunda_iteracion`)
 * **Enfoque:** Refactorización hacia una arquitectura distribuida orientada a microservicios con **Spring Boot 3.3.5**, comunicación HTTP/REST y mensajería orientada a eventos con **RabbitMQ**.
 * **Patrón de Datos:** *Database per Service* (cada servicio gestiona de forma autónoma su propio almacenamiento).
+* **Ajustes de diseño respecto al documento de arquitectura inicial** (decididos por el equipo):
+  1. **Banco y Validación en un solo servicio:** la tubería de filtros corre dentro del Banco; ya no hay `validacion-service`.
+  2. **Los eventos del Banco los consumen Revisión y Auditoría** (cada una con su propia cola).
+  3. **`revision-service` ocupa el lugar del servicio de Validación** (revisión por pares, HU05).
+  4. **`QuestionState` pasa de enum a una jerarquía de clases** (patrón State).
 * **Módulos y Servicios de la Solución:**
-  1. **`auth-service` (Puerto 8081):** Microservicio para autenticación, gestión de credenciales (Argon2id) y emisión/validación de tokens de sesión firmados (HMAC-SHA256). Posee base de datos propia `auth.db`.
-  2. **`validacion-service` (Puerto 8083):** Microservicio sin estado (*stateless* / in-memory) que expone el pipeline de 7 filtros para verificar la estructura y calidad de las preguntas.
-  3. **`banco-service` (Puerto 8082):** Microservicio para administración del ciclo de vida de preguntas, persistencia en `banco.db`, consulta multicriterio, integración con `validacion-service` y publicación de eventos de auditoría y cambio de estado en RabbitMQ (`questions.exchange`).
-  4. **Cliente de Escritorio (`src/`):** Aplicación JavaFX adaptada para comunicarse con `auth-service` a través de `RestAuthClient` y manejar sesiones desacopladas mediante tokens Bearer (`Session`).
+  1. **`auth-service` (Puerto 8081):** autenticación, credenciales (Argon2id) y emisión de tokens firmados (HMAC-SHA256, vencimiento en UTC). Base de datos `auth.db`.
+  2. **`banco-service` (Puerto 8082):** preguntas, validación estructural embebida (pipeline de 7 filtros), ciclo de vida con patrón State, consulta multicriterio, matriz de roles y publicación de eventos `QuestionCreated` y `QuestionStateChanged`. Base de datos `banco.db`.
+  3. **`revision-service` (Puerto 8083):** consume `QuestionStateChanged`, crea revisiones y, cuando un revisor emite su dictamen, llama por REST al Banco para ejecutar la transición. Base de datos `revision.db`.
+  4. **`auditoria-service` (Puerto 8084):** consume los eventos del Banco de forma idempotente y expone el historial. Base de datos `auditoria.db`.
+  5. **Cliente de Escritorio (`src/`):** aplicación JavaFX adaptada para el login contra `auth-service` mediante `RestAuthClient` y sesiones con token Bearer (`Session`). El resto del cliente aún usa el Banco local.
 
 ---
 
@@ -184,6 +190,7 @@ classDiagram
    - Permite componer, alterar el orden o agregar nuevas validaciones fácilmente respetando el principio Abierto/Cerrado (OCP).
 5. **Patrón State (Máquina de Estados):**
    - Cada constante del enumerado `QuestionState` implementa el método `allowedTransitions()`, delimitando de forma segura los saltos de estado válidos.
+   - **Iteración 2:** en `banco-service` el enum se reemplazó por una jerarquía de clases (`QuestionState` abstracta con una subclase por estado). Cada estado sobrescribe solo las operaciones que le son legales y las demás lanzan `InvalidStateOperationException`; el cambio de estado usa doble despacho, sin `switch`.
 6. **Patrón Data Transfer Object (DTO):**
    - Objetos inmutables como `QuestionDraft`, `QuestionDraftRequest`, `ValidationResponse`, `RegisterRequest`, `LoginResponse` para desacoplar el transporte de datos de las entidades internas.
 
@@ -191,89 +198,59 @@ classDiagram
 
 ## 5. Arquitectura de Microservicios (Iteración 2)
 
-En la segunda fase del proyecto, el sistema evoluciona hacia una arquitectura distribuida:
-
 ```mermaid
 flowchart TD
-    subgraph Frontend["Capa de Presentación"]
-        JavaFX["Cliente Desktop JavaFX"]
-        RestAuthClient["RestAuthClient (HTTP)"]
-        JavaFX --> RestAuthClient
+    Cliente["Cliente (JavaFX / Postman)"]
+
+    subgraph Servicios["Microservicios (Spring Boot)"]
+        Auth["auth-service :8081\nUsuarios, login, token firmado"]
+        Banco["banco-service :8082\nPreguntas + validación embebida\nState pattern"]
+        Rev["revision-service :8083\nRevisión por pares"]
+        Aud["auditoria-service :8084\nHistorial (idempotente)"]
     end
 
-    subgraph Microservicios["Ecosistema de Microservicios"]
-        AuthSvc["auth-service (Puerto 8081)\n• Autenticación & Usuarios\n• Hashing Argon2id\n• Emisión de AuthTokens (HMAC-SHA256)"]
-        ValSvc["validacion-service (Puerto 8083)\n• Stateless Pipeline\n• 7 Filtros de Calidad\n• POST /validaciones"]
-        BancoSvc["banco-service (Puerto 8082)\n• Gestión de Preguntas & Estados\n• Consulta multicriterio\n• Verificación de Token"]
-    end
+    MQ[("RabbitMQ\nexchange saberpro.events")]
 
-    subgraph EventBus["Broker de Mensajería"]
-        RabbitMQ[("RabbitMQ\nExchange: questions.exchange\nPuerto 5672")]
-    end
-
-    subgraph Storage["Persistencia Descentralizada"]
-        AuthDB[("auth.db (SQLite)")]
-        BancoDB[("banco.db (SQLite)")]
-    end
-
-    RestAuthClient -- "POST /login\nPOST /usuarios" --> AuthSvc
-    AuthSvc --- AuthDB
-    
-    JavaFX -. "Consumo REST" .-> BancoSvc
-    BancoSvc -- "POST /validaciones (Síncrono)" --> ValSvc
-    BancoSvc --- BancoDB
-    BancoSvc -- "Publicación de eventos (Asíncrono)" --> RabbitMQ
+    Cliente -- "POST /login" --> Auth
+    Cliente -- "REST + Bearer" --> Banco
+    Cliente -- "REST + Bearer" --> Rev
+    Cliente -- "GET /auditoria/preguntas/id" --> Aud
+    Banco -- "question.created\nquestion.state-changed" --> MQ
+    MQ -- "question.state-changed" --> Rev
+    MQ -- "question.*" --> Aud
+    Rev -- "PATCH /preguntas/id/estado (token del revisor)" --> Banco
 ```
+
+Banco, Revisión y Auditoría **verifican el token localmente** (mismo secreto que `auth-service`), sin llamarlo en cada petición.
+
+### Flujo de una pregunta
+1. El autor crea la pregunta (`POST /preguntas`). El Banco la valida, la guarda en `BORRADOR` y publica `QuestionCreated`.
+2. El autor la envía a revisión (`PATCH /preguntas/{id}/estado`). El Banco publica `QuestionStateChanged`; Revisión crea una revisión pendiente y Auditoría registra el cambio.
+3. Un revisor toma la revisión: Revisión pide al Banco el paso a `EN_REVISION`.
+4. El revisor emite el dictamen: el Banco pasa la pregunta a `APROBADA` o `RECHAZADA`.
+5. Auditoría tiene el historial completo, que se consulta con `GET /auditoria/preguntas/{id}`.
 
 ### Detalle de los Microservicios
 
-#### A. `auth-service`
-* **Tecnología:** Spring Boot 3.3.5, Java 17, SQLite JDBC, Argon2 JVM.
-* **Puerto:** `8081`
-* **Persistencia:** Base de datos independiente `auth.db`.
-* **Endpoints:**
-  - `POST /usuarios`: Registro de nuevos usuarios con contraseña cifrada en Argon2id.
-  - `POST /login`: Validación de credenciales y generación de `AuthToken` firmado digitalmente (secreto compartido, validez de 60 minutos).
-  - `GET /usuarios`: Listado de usuarios registrados (omite el hash de contraseña por seguridad).
+Cada servicio tiene su propio `README.md` con endpoints, reglas y ejecución.
 
-#### B. `validacion-service`
-* **Tecnología:** Spring Boot 3.3.5, Java 17.
-* **Puerto:** `8083`
-* **Persistencia:** No requiere (servicio puramente computacional y sin estado).
-* **Endpoints:**
-  - `POST /validaciones`: Valida borradores de preguntas contra los 7 filtros.
-  - **Respuestas HTTP:**
-    - `200 OK`: `{"valid": true, "errors": []}`
-    - `422 Unprocessable Entity`: `{"valid": false, "errors": ["RF-xx: detalle del error"]}`
-    - `400 Bad Request`: `{"valid": false, "errors": ["Solicitud mal formada"]}`
-* **Herramientas:** Incluye colección exportada de Postman en `validacion-service/postman/validacion-service.postman_collection.json`.
+| Servicio | Puerto | Persistencia | Entrada | Salida |
+|---|---|---|---|---|
+| `auth-service` | 8081 | `auth.db` | REST | token firmado |
+| `banco-service` | 8082 | `banco.db` | REST | eventos a RabbitMQ |
+| `revision-service` | 8083 | `revision.db` | REST + cola `revision.preguntas` | REST hacia el Banco |
+| `auditoria-service` | 8084 | `auditoria.db` | cola `auditoria.preguntas` + REST | — |
 
-#### C. `banco-service`
-* **Tecnología:** Spring Boot 3.3.5, Spring AMQP (RabbitMQ), SQLite JDBC.
-* **Puerto:** `8082`
-* **Persistencia:** Base de datos independiente `banco.db` (tablas `questions`, `question_options`, `question_state_history`).
-* **Integraciones:**
-  - Valida tokens firmados emitidos por `auth-service` mediante `TokenVerifier`.
-  - Invoca síncronamente vía HTTP a `validacion-service` en `http://localhost:8083` para validar cada borrador antes de guardarlo.
-  - Publica eventos asíncronos en RabbitMQ (`questions.exchange` en `localhost:5672`) al crear preguntas o aplicar transiciones de ciclo de vida.
-* **Endpoints:**
-  - `GET /preguntas`: Consulta general y búsqueda multicriterio (`state`, `difficulty`, `competence`, `topic`, `subtopic`, `text`).
-  - `GET /preguntas/{id}`: Consulta por identificador único.
-  - `POST /preguntas`: Creación de preguntas en borrador (requiere rol `ADMINISTRADOR` o `AUTOR_PREGUNTAS`).
-  - `PUT /preguntas/{id}`: Edición de preguntas en borrador (requiere rol `ADMINISTRADOR` o `AUTOR_PREGUNTAS`).
-  - `PATCH /preguntas/{id}/estado`: Transición de la máquina de estados con registro de auditoría (requiere rol `ADMINISTRADOR`, `AUTOR_PREGUNTAS` o `REVISOR`).
-  - `GET /preguntas/{id}/historial`: Consulta de la trazabilidad y auditoría de cambios de estado.
-  - `GET /preguntas/estadisticas`: Conteo y distribución porcentual por estado.
-* **Herramientas y Pruebas:**
-  - Colección Postman en `banco-service/postman/banco-service.postman_collection.json`.
-  - Batería de pruebas unitarias y de integración para repositorio, servicio, seguridad y controlador REST.
+**Matriz de roles en el Banco:** crear y editar, `ADMINISTRADOR` y `AUTOR_PREGUNTAS`; cambiar estado, `ADMINISTRADOR`, `AUTOR_PREGUNTAS` y `REVISOR`; consultar, cualquier usuario autenticado.
+
+**Herramientas:** `docker-compose.yml` (RabbitMQ) y la colección de Postman `postman/saberpro-microservicios.postman_collection.json`.
 
 ---
 
 ## 6. Modelo de Datos Relacional
 
 ### Esquema Inicial (Monolito) y Descentralizado
-En la Iteración 1, las tablas residen en `taller2.db`. En la Iteración 2, `users` reside en `auth.db`, y el bloque de preguntas reside en `banco.db`.
+En la Iteración 1, las tablas residen en `taller2.db`. En la Iteración 2, `users` reside en `auth.db`, `questions` y `question_options` en `banco.db`, y el historial de cambios de estado (`question_state_history` del monolito) pasa a `audit_records` en `auditoria.db`, alimentada por eventos. `revision-service` agrega `reviews` y `processed_events` en `revision.db`. Entre servicios solo se referencia por identificador, sin llaves foráneas.
 
 ```mermaid
 erDiagram
@@ -338,7 +315,7 @@ El proyecto implementa una batería exhaustiva de pruebas automáticas con **JUn
 4. **Pruebas de Pipeline y Filtros:**
    - Pruebas independientes para cada uno de los 7 filtros verificando tanto casos límite positivos como negativos, más pruebas completas de integración de punta a punta (`QuestionPipelineTest`).
 5. **Pruebas de Integración y API REST:**
-   - Pruebas de contrato HTTP con `MockMvc` en `auth-service` y `validacion-service`.
+   - Pruebas de contrato HTTP con `MockMvc` en `auth-service`, `banco-service`, `revision-service` y `auditoria-service`.
 6. **Validación de Usabilidad (Thinking Aloud):**
    - Sesión experimental documentada con 3 estudiantes ajenos al equipo de desarrollo, evaluando los flujos de inicio de sesión, redacción con el editor de preguntas, búsqueda por filtros y cambio de estados, recopilando oportunidades de mejora ergonómica y visual.
 
@@ -355,18 +332,11 @@ proyecto-saberpro-ing-software-II/
 │   ├── src/test/java/                  # Pruebas unitarias y de integración REST
 │   └── pom.xml
 │
-├── banco-service/                      # Microservicio de Banco de Preguntas (Spring Boot 3.3.5)
-│   ├── src/main/java/                  # Modelos de dominio Question, State, RabbitMQ config
-│   ├── src/main/resources/             # application.properties (puerto 8082, banco.db, RabbitMQ)
-│   └── pom.xml
-│
-├── validacion-service/                 # Microservicio de Validación Estructural (Spring Boot 3.3.5)
-│   ├── postman/                        # Colección Postman de prueba
-│   ├── src/main/java/                  # Pipeline, los 7 Filtros, ValidationController
-│   ├── src/main/resources/             # application.properties (puerto 8083)
-│   ├── src/test/java/                  # 44 pruebas unitarias del pipeline y controlador
-│   ├── README.md                       # Especificación técnica del servicio
-│   └── pom.xml
+├── banco-service/                      # Banco + validación embebida + State pattern (8082)
+├── revision-service/                   # Revisión por pares (8083)
+├── auditoria-service/                  # Historial por eventos (8084)
+├── postman/                            # Colección de Postman de todo el flujo
+├── docker-compose.yml                  # RabbitMQ
 │
 ├── docs/                               # Documentación de Diseño y Arquitectura
 │   ├── Decisiones_Tecnicas_...pdf      # Justificación técnica de alternativas elegidas y descartadas
@@ -411,12 +381,13 @@ mvn spring-boot:run
 ```
 *Disponible en:* `http://localhost:8081`
 
-### 3. Ejecutar `validacion-service`
+### 3. Ejecutar el resto de los servicios
 ```bash
-cd validacion-service
-mvn spring-boot:run
+docker compose up -d        # RabbitMQ (puertos 5672 y 15672)
+cd banco-service     && mvn spring-boot:run   # http://localhost:8082
+cd revision-service  && mvn spring-boot:run   # http://localhost:8083
+cd auditoria-service && mvn spring-boot:run   # http://localhost:8084
 ```
-*Disponible en:* `http://localhost:8083`
 
 ### 4. Ejecutar Pruebas Unitarias
 Para correr la suite de pruebas en cualquier módulo:

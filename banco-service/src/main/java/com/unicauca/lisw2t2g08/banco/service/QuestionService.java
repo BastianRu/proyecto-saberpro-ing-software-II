@@ -1,216 +1,165 @@
 package com.unicauca.lisw2t2g08.banco.service;
 
-import java.time.LocalDateTime;
-import java.util.EnumMap;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.unicauca.lisw2t2g08.banco.access.IQuestionRepository;
-import com.unicauca.lisw2t2g08.banco.client.IValidationClient;
+import com.unicauca.lisw2t2g08.banco.domain.InvalidStateOperationException;
 import com.unicauca.lisw2t2g08.banco.domain.Question;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionCriteria;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionStateChange;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStates;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionStatistics;
-import com.unicauca.lisw2t2g08.banco.messaging.IQuestionEventPublisher;
-import com.unicauca.lisw2t2g08.banco.messaging.QuestionEvent;
+import com.unicauca.lisw2t2g08.banco.events.IEventPublisher;
+import com.unicauca.lisw2t2g08.banco.events.QuestionCreatedEvent;
+import com.unicauca.lisw2t2g08.banco.events.QuestionStateChangedEvent;
+import com.unicauca.lisw2t2g08.banco.pipeline.QuestionPipeline;
 
 /**
- * Logica de negocio central del banco de preguntas.
- *
- * Implementa las reglas de dominio:
- * - Validacion estructural previa con el microservicio validacion-service.
- * - Numeracion consecutiva de preguntas (P-001, P-002, ...).
- * - Restriccion de modificacion unicamente para preguntas en estado Borrador.
- * - Transiciones controladas por la maquina de estados de QuestionState.
- * - Registro de auditoria historica de cada transicion con usuario y fecha.
- * - Publicacion asincrona de eventos a RabbitMQ.
+ * Lógica de negocio del Banco. La validación estructural (HU03) corre en el mismo
+ * proceso: es la tubería de filtros, ya no un servicio aparte. El Observer del monolito
+ * desaparece: los cambios se comunican con eventos hacia otros servicios.
  */
 public class QuestionService implements IQuestionService {
 
+    private static final Logger log = LoggerFactory.getLogger(QuestionService.class);
     private static final String ID_PREFIX = "P-";
 
     private final IQuestionRepository repository;
-    private final IValidationClient validationClient;
-    private final IQuestionEventPublisher eventPublisher;
+    private final QuestionPipeline pipeline;
+    private final IEventPublisher events;
+    private final Clock clock;
 
-    public QuestionService(IQuestionRepository repository,
-                           IValidationClient validationClient,
-                           IQuestionEventPublisher eventPublisher) {
-        if (repository == null) {
-            throw new IllegalArgumentException("El repositorio es obligatorio");
-        }
-        if (validationClient == null) {
-            throw new IllegalArgumentException("El cliente de validacion es obligatorio");
-        }
-        if (eventPublisher == null) {
-            throw new IllegalArgumentException("El publicador de eventos es obligatorio");
-        }
+    public QuestionService(IQuestionRepository repository, QuestionPipeline pipeline,
+                           IEventPublisher events, Clock clock) {
         this.repository = repository;
-        this.validationClient = validationClient;
-        this.eventPublisher = eventPublisher;
+        this.pipeline = pipeline;
+        this.events = events;
+        this.clock = clock;
+    }
+
+    // synchronized: nextId() lee y save() escribe; sin esto dos altas simultáneas podrían obtener el mismo id
+    @Override
+    public synchronized Question createQuestion(QuestionDraft draft, String username) {
+        requireDraft(draft);
+        pipeline.run(draft);
+        Question question = new Question(nextId(), draft.getName(), draft.getContext(),
+                draft.getDirectQuestion(), distractorsOf(draft), draft.getJustification(),
+                draft.getBibliography(), draft.getCompetence(), draft.getTopic(),
+                draft.getSubtopic(), draft.getDifficulty(), QuestionStates.BORRADOR);
+        if (!repository.save(question)) {
+            throw new IllegalStateException("No fue posible guardar la pregunta " + question.getId());
+        }
+        publishSafely(() -> events.publish(new QuestionCreatedEvent(
+                newEventId(), question.getId(), usernameOrSystem(username), Instant.now(clock))));
+        return question;
     }
 
     @Override
-    public List<Question> listQuestions() {
-        return repository.findAll();
+    public Question updateQuestion(String id, QuestionDraft draft) {
+        requireDraft(draft);
+        Question question = getQuestion(id);
+        // Se comprueba el estado antes de validar para no pedir correcciones inútiles
+        if (!question.getState().isEditable()) {
+            throw new InvalidStateOperationException(
+                    "Solo se pueden modificar preguntas en estado Borrador");
+        }
+        pipeline.run(draft);
+        question.modifyContent(draft.getName(), draft.getContext(), draft.getDirectQuestion(),
+                distractorsOf(draft), draft.getJustification(), draft.getBibliography(),
+                draft.getCompetence(), draft.getTopic(), draft.getSubtopic(), draft.getDifficulty());
+        if (!repository.update(question)) {
+            throw new IllegalStateException("No fue posible actualizar la pregunta " + id);
+        }
+        return question;
+    }
+
+    @Override
+    public Question getQuestion(String id) {
+        if (id == null || id.isBlank()) {
+            throw new QuestionNotFoundException(id);
+        }
+        return repository.findById(id).orElseThrow(() -> new QuestionNotFoundException(id));
     }
 
     @Override
     public List<Question> searchQuestions(QuestionCriteria criteria) {
         List<Question> all = repository.findAll();
-        if (criteria == null) {
-            return all;
-        }
-        return all.stream().filter(criteria::matches).toList();
+        return criteria == null ? all : all.stream().filter(criteria::matches).toList();
     }
 
     @Override
-    public Optional<Question> findById(String id) {
-        if (id == null || id.isBlank()) {
-            return Optional.empty();
+    public Question changeState(String id, String targetState, String username) {
+        Question question = getQuestion(id);
+        QuestionState target = QuestionStates.fromCode(targetState);
+        QuestionState previous = question.getState();
+
+        question.changeState(target); // el patrón State decide si es legal
+        if (previous == question.getState()) {
+            return question; // sin cambio real: no se persiste ni se publica
         }
-        return repository.findById(id);
-    }
-
-    @Override
-    public Question createQuestion(QuestionDraft draft, String username) {
-        if (draft == null) {
-            throw new IllegalArgumentException("El borrador de la pregunta es obligatorio");
-        }
-
-        // Valida con el microservicio de validacion estructural
-        validationClient.validate(draft);
-
-        String id = nextId();
-        Question question = new Question(
-                id,
-                draft.getName(),
-                draft.getContext(),
-                draft.getDirectQuestion(),
-                distractorsOf(draft),
-                draft.getJustification(),
-                draft.getBibliography(),
-                draft.getCompetence(),
-                draft.getTopic(),
-                draft.getSubtopic(),
-                draft.getDifficulty(),
-                QuestionState.BORRADOR);
-
-        if (!repository.save(question)) {
-            throw new IllegalStateException("No fue posible guardar la pregunta " + id);
-        }
-
-        // Registro inicial de auditoria
-        repository.saveStateChange(new QuestionStateChange(
-                id, null, QuestionState.BORRADOR, username, LocalDateTime.now()));
-
-        // Publica evento en RabbitMQ
-        eventPublisher.publish(QuestionEvent.created(id, username));
-
-        return question;
-    }
-
-    @Override
-    public Question updateQuestion(String id, QuestionDraft draft, String username) {
-        if (draft == null) {
-            throw new IllegalArgumentException("El borrador de la pregunta es obligatorio");
-        }
-
-        Question question = findById(id)
-                .orElseThrow(() -> new IllegalStateException("La pregunta no existe en el banco: " + id));
-
-        // Solo se pueden modificar preguntas en estado Borrador
-        if (question.getState() != QuestionState.BORRADOR) {
-            throw new IllegalStateException("Solo se pueden modificar preguntas en estado Borrador");
-        }
-
-        // Valida con el microservicio
-        validationClient.validate(draft);
-
-        question.modifyContent(
-                draft.getName(),
-                draft.getContext(),
-                draft.getDirectQuestion(),
-                distractorsOf(draft),
-                draft.getJustification(),
-                draft.getBibliography(),
-                draft.getCompetence(),
-                draft.getTopic(),
-                draft.getSubtopic(),
-                draft.getDifficulty());
-
         if (!repository.update(question)) {
             throw new IllegalStateException("No fue posible actualizar la pregunta " + id);
         }
-
-        eventPublisher.publish(QuestionEvent.updated(id, username));
-
+        publishSafely(() -> events.publish(new QuestionStateChangedEvent(
+                newEventId(), id, previous.getCode(), question.getState().getCode(),
+                usernameOrSystem(username), Instant.now(clock))));
         return question;
-    }
-
-    @Override
-    public boolean changeState(String id, QuestionState newState, String username) {
-        if (id == null || id.isBlank()) {
-            return false;
-        }
-
-        Question question = findById(id)
-                .orElseThrow(() -> new IllegalStateException("La pregunta no existe en el banco: " + id));
-
-        QuestionState previous = question.getState();
-        if (previous == newState) {
-            return true; // Sin cambio efectivo
-        }
-
-        // changeState valida con la maquina de estados (QuestionState.canTransitionTo)
-        question.changeState(newState);
-
-        boolean updated = repository.update(question);
-        if (updated) {
-            repository.saveStateChange(new QuestionStateChange(
-                    id, previous, newState, username, LocalDateTime.now()));
-
-            eventPublisher.publish(QuestionEvent.stateChanged(id, previous, newState, username));
-        }
-        return updated;
-    }
-
-    @Override
-    public List<QuestionStateChange> stateHistory(String id) {
-        if (id == null || id.isBlank()) {
-            return List.of();
-        }
-        return repository.findStateHistory(id);
     }
 
     @Override
     public QuestionStatistics getStatistics() {
-        Map<QuestionState, Integer> counts = new EnumMap<>(QuestionState.class);
-        for (QuestionState state : QuestionState.values()) {
-            counts.put(state, 0);
-        }
-        for (Question question : repository.findAll()) {
-            counts.merge(question.getState(), 1, Integer::sum);
-        }
+        Map<String, Integer> counts = repository.countByState();
         return new QuestionStatistics(counts);
     }
 
+    // El cambio ya está guardado: si el broker falla no se revierte, solo se deja constancia.
+    // Limitación conocida: ese evento se pierde (la solución completa sería un outbox transaccional).
+    private void publishSafely(Runnable publication) {
+        try {
+            publication.run();
+        } catch (RuntimeException e) {
+            log.warn("No se pudo publicar el evento; los consumidores no se enterarán de este cambio", e);
+        }
+    }
+
+    private static void requireDraft(QuestionDraft draft) {
+        if (draft == null) {
+            throw new IllegalArgumentException("El borrador de la pregunta es obligatorio");
+        }
+    }
+
+    // Las opciones del borrador ya incluyen la correcta; la tubería validó su índice
     private static QuestionDistractors distractorsOf(QuestionDraft draft) {
         return new QuestionDistractors(draft.getOptions(), draft.getCorrectIndex());
     }
 
-    private synchronized String nextId() {
+    private static String usernameOrSystem(String username) {
+        return (username == null || username.isBlank()) ? "sistema" : username;
+    }
+
+    private static String newEventId() {
+        return UUID.randomUUID().toString();
+    }
+
+    // Siguiente id consecutivo con el formato "P-001"
+    private String nextId() {
         int max = 0;
         for (Question question : repository.findAll()) {
             String id = question.getId();
-            if (id != null && id.startsWith(ID_PREFIX)) {
+            if (id.startsWith(ID_PREFIX)) {
                 try {
                     max = Math.max(max, Integer.parseInt(id.substring(ID_PREFIX.length())));
                 } catch (NumberFormatException ignored) {
+                    // ids con otro formato no cuentan para la secuencia
                 }
             }
         }

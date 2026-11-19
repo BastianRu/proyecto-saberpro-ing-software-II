@@ -1,10 +1,7 @@
 package com.unicauca.lisw2t2g08.banco.security;
 
-/**
- * Lanzada cuando el rol del usuario autenticado no cuenta con permisos suficientes.
- */
+/** El usuario está autenticado pero su rol no permite la operación. La API responde 403. */
 public class ForbiddenException extends RuntimeException {
-
     public ForbiddenException(String message) {
         super(message);
     }

@@ -1,253 +1,224 @@
 package com.unicauca.lisw2t2g08.banco.api;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
-import com.unicauca.lisw2t2g08.banco.domain.DifficultyLevel;
-import com.unicauca.lisw2t2g08.banco.domain.Question;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionCriteria;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionDistractors;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionDraft;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionStateChange;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionStatistics;
-import com.unicauca.lisw2t2g08.banco.domain.Role;
-import com.unicauca.lisw2t2g08.banco.security.ForbiddenException;
-import com.unicauca.lisw2t2g08.banco.security.TokenVerifier;
-import com.unicauca.lisw2t2g08.banco.security.UnauthorizedException;
-import com.unicauca.lisw2t2g08.banco.service.IQuestionService;
+import com.unicauca.lisw2t2g08.banco.events.IEventPublisher;
+import com.unicauca.lisw2t2g08.banco.service.RecordingEventPublisher;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+/** Prueba de punta a punta del contrato REST, con SQLite en memoria y el broker reemplazado por un publicador en memoria. */
+@SpringBootTest(properties = {
+        "banco.db.url=jdbc:sqlite::memory:",
+        "auth.token.secret=secreto-de-prueba-0123456789"})
+@AutoConfigureMockMvc
+@Import(QuestionControllerTest.TestBroker.class)
 class QuestionControllerTest {
 
-    private static final String SECRET = "0123456789abcdef0123456789abcdef";
-    private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
-
-    private Clock fixedClock;
-    private TokenVerifier tokenVerifier;
-    private FakeQuestionService fakeService;
-    private QuestionController controller;
-
-    @BeforeEach
-    void setUp() {
-        fixedClock = Clock.fixed(Instant.parse("2026-11-04T12:00:00Z"), ZoneId.of("UTC"));
-        tokenVerifier = new TokenVerifier(SECRET, fixedClock);
-        fakeService = new FakeQuestionService();
-        controller = new QuestionController(fakeService, tokenVerifier);
+    @TestConfiguration
+    static class TestBroker {
+        @Bean
+        @Primary
+        RecordingEventPublisher recordingPublisher() {
+            return new RecordingEventPublisher();
+        }
     }
 
-    @Test
-    void list_withoutFilters_returnsAllQuestions() {
-        fakeService.storedQuestions.add(sampleQuestion("P-001", "Pregunta 1", QuestionState.BORRADOR));
-        fakeService.storedQuestions.add(sampleQuestion("P-002", "Pregunta 2", QuestionState.APROBADA));
+    private static final String VALID = """
+            {"name":"Ciclo del agua",
+             "context":"Un estudiante observa cómo el agua de un lago se evapora durante el día.",
+             "directQuestion":"¿Qué proceso físico describe mejor lo observado?",
+             "options":["Evaporación","Condensación","Solidificación","Sublimación","Fusión"],
+             "correctIndex":0,"justification":"La evaporación es el paso de líquido a gas.",
+             "bibliography":"Física general","competence":"Ciencias naturales",
+             "topic":"Termodinámica","subtopic":"Cambios de fase","difficulty":"MEDIA"}""";
 
-        List<QuestionResponse> response = controller.list(null, null, null, null, null, null);
+    @Autowired
+    private MockMvc mvc;
+    @Autowired
+    private RecordingEventPublisher publisher;
 
-        assertEquals(2, response.size());
-        assertEquals("P-001", response.get(0).id());
-        assertEquals("P-002", response.get(1).id());
-    }
-
-    @Test
-    void findById_existingId_returnsQuestion() {
-        fakeService.storedQuestions.add(sampleQuestion("P-001", "Pregunta 1", QuestionState.BORRADOR));
-
-        QuestionResponse response = controller.findById("P-001");
-
-        assertNotNull(response);
-        assertEquals("P-001", response.id());
-    }
-
-    @Test
-    void findById_nonExistingId_throwsNotFound() {
-        assertThrows(ResourceNotFoundException.class, () -> controller.findById("P-999"));
-    }
-
-    @Test
-    void create_withoutToken_throwsUnauthorized() {
-        QuestionRequest request = sampleRequest();
-
-        assertThrows(UnauthorizedException.class, () -> controller.create(null, request));
-        assertThrows(UnauthorizedException.class, () -> controller.create("", request));
-    }
-
-    @Test
-    void create_withInsufficientRole_throwsForbidden() {
-        String token = "Bearer " + createToken("estudiante1", Role.ESTUDIANTE);
-        QuestionRequest request = sampleRequest();
-
-        assertThrows(ForbiddenException.class, () -> controller.create(token, request));
-    }
-
-    @Test
-    void create_withAutorRole_createsQuestion() {
-        String token = "Bearer " + createToken("autor1", Role.AUTOR_PREGUNTAS);
-        QuestionRequest request = sampleRequest();
-
-        QuestionResponse response = controller.create(token, request);
-
-        assertNotNull(response);
-        assertEquals("P-001", response.id());
-        assertEquals(QuestionState.BORRADOR, response.state());
-    }
-
-    @Test
-    void changeState_withRevisorRole_updatesState() {
-        fakeService.storedQuestions.add(sampleQuestion("P-001", "Pregunta 1", QuestionState.PENDIENTE_REVISION));
-        String token = "Bearer " + createToken("revisor1", Role.REVISOR);
-
-        ChangeStateRequest request = new ChangeStateRequest(QuestionState.EN_REVISION);
-        QuestionResponse response = controller.changeState("P-001", token, request);
-
-        assertEquals(QuestionState.EN_REVISION, response.state());
-    }
-
-    @Test
-    void statistics_returnsStatisticsResponse() {
-        fakeService.storedQuestions.add(sampleQuestion("P-001", "P1", QuestionState.BORRADOR));
-        fakeService.storedQuestions.add(sampleQuestion("P-002", "P2", QuestionState.BORRADOR));
-
-        QuestionStatisticsResponse stats = controller.statistics();
-
-        assertEquals(2, stats.total());
-        assertEquals(2, stats.counts().get(QuestionState.BORRADOR));
-        assertEquals(100.0, stats.percentages().get(QuestionState.BORRADOR));
-    }
-
-    private QuestionRequest sampleRequest() {
-        return new QuestionRequest(
-                "Pregunta nueva",
-                "Contexto de mas de 20 caracteres para validar.",
-                "Cual es la correcta?",
-                List.of("A", "B", "C", "D", "E"),
-                0,
-                "Justificacion",
-                "Bibliografia",
-                "Ingenieria",
-                "Tema",
-                "Subtema",
-                DifficultyLevel.MEDIA);
-    }
-
-    private Question sampleQuestion(String id, String name, QuestionState state) {
-        return new Question(
-                id,
-                name,
-                "Contexto de ejemplo",
-                "Enunciado?",
-                new QuestionDistractors(List.of("A", "B", "C", "D", "E"), 0),
-                "Justificacion",
-                "Bibliografia",
-                "Competencia",
-                "Tema",
-                "Subtema",
-                DifficultyLevel.MEDIA,
-                state);
-    }
-
-    private String createToken(String subject, Role role) {
-        LocalDateTime future = LocalDateTime.now(fixedClock).plusMinutes(30);
-        String payload = subject + "|" + role.name() + "|" + future;
-        String encodedPayload = ENCODER.encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+    // Firma un token igual que lo haría auth-service (mismo formato y secreto)
+    private static String tokenFor(String login, String role, LocalDateTime expiresAt) {
         try {
+            String payload = login + "|" + role + "|" + expiresAt;
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-            String signature = ENCODER.encodeToString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
-            return encodedPayload + "." + signature;
+            mac.init(new SecretKeySpec("secreto-de-prueba-0123456789".getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            Base64.Encoder enc = Base64.getUrlEncoder().withoutPadding();
+            return enc.encodeToString(payload.getBytes(StandardCharsets.UTF_8)) + "."
+                    + enc.encodeToString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException(e);
         }
     }
 
-    private static class FakeQuestionService implements IQuestionService {
-        final List<Question> storedQuestions = new java.util.ArrayList<>();
+    private static String bearer(String login) {
+        return bearer(login, "AUTOR_PREGUNTAS");
+    }
 
-        @Override
-        public List<Question> listQuestions() {
-            return storedQuestions;
+    private static String bearer(String login, String role) {
+        return "Bearer " + tokenFor(login, role, LocalDateTime.now(ZoneOffset.UTC).plusHours(1));
+    }
+
+    private String createQuestion(String login) throws Exception {
+        String body = mvc.perform(post("/preguntas").header("Authorization", bearer(login))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.state").value("BORRADOR"))
+                .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(body, "$.id");
+    }
+
+    @Test
+    void sinTokenEs401() throws Exception {
+        mvc.perform(get("/preguntas")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void tokenFirmadoConOtroSecretoOVencidoEs401() throws Exception {
+        mvc.perform(get("/preguntas").header("Authorization", "Bearer abc.def")).andExpect(status().isUnauthorized());
+        String expired = tokenFor("ana", "DOCENTE", LocalDateTime.now(ZoneOffset.UTC).minusMinutes(1));
+        mvc.perform(get("/preguntas").header("Authorization", "Bearer " + expired)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void crearConsultarYListar() throws Exception {
+        String id = createQuestion("ana");
+
+        mvc.perform(get("/preguntas/" + id).header("Authorization", bearer("ana")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.directQuestion").value("¿Qué proceso físico describe mejor lo observado?"))
+                .andExpect(jsonPath("$.allowedTransitions[0]").value("PENDIENTE_REVISION"));
+        mvc.perform(get("/preguntas").param("state", "BORRADOR").header("Authorization", bearer("ana")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", hasItem(id)));
+    }
+
+    @Test
+    void borradorInvalidoEs422ConLaListaDeErrores() throws Exception {
+        mvc.perform(post("/preguntas").header("Authorization", bearer("ana"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID.replace("Un estudiante observa cómo el agua de un lago se evapora durante el día.", "corto")))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors").isNotEmpty());
+    }
+
+    @Test
+    void cambiarEstadoPublicaElEventoConElUsuarioDelToken() throws Exception {
+        String id = createQuestion("beto");
+        publisher.clear();
+
+        mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("beto"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"PENDIENTE_REVISION\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("PENDIENTE_REVISION"));
+
+        org.junit.jupiter.api.Assertions.assertEquals(1, publisher.stateChanged.size());
+        org.junit.jupiter.api.Assertions.assertEquals("beto", publisher.stateChanged.get(0).username());
+    }
+
+    @Test
+    void transicionInvalidaEs409() throws Exception {
+        String id = createQuestion("carla");
+        mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("carla"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"PUBLICADA\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void estadoDesconocidoEs400YPreguntaInexistenteEs404() throws Exception {
+        String id = createQuestion("dani");
+        mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("dani"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"XYZ\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/preguntas/P-999").header("Authorization", bearer("dani"))).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void editarFueraDeBorradorEs409() throws Exception {
+        String id = createQuestion("eva");
+        mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("eva"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"PENDIENTE_REVISION\"}"));
+
+        mvc.perform(put("/preguntas/" + id).header("Authorization", bearer("eva"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void estadisticasListanLosSieteEstados() throws Exception {
+        createQuestion("fer");
+        mvc.perform(get("/preguntas/estadisticas").header("Authorization", bearer("fer")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.byState.BORRADOR.count").isNumber())
+                .andExpect(jsonPath("$.byState.ARCHIVADA.count").value(0))
+                .andExpect(jsonPath("$.total").isNumber());
+    }
+
+    // --- RF-03: matriz de roles ---
+
+    @Test
+    void soloAdministradorYAutorPuedenCrear() throws Exception {
+        for (String role : new String[] {"REVISOR", "DOCENTE", "ESTUDIANTE"}) {
+            mvc.perform(post("/preguntas").header("Authorization", bearer("x", role))
+                            .contentType(MediaType.APPLICATION_JSON).content(VALID))
+                    .andExpect(status().isForbidden());
         }
+        mvc.perform(post("/preguntas").header("Authorization", bearer("admin", "ADMINISTRADOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID))
+                .andExpect(status().isCreated());
+    }
 
-        @Override
-        public List<Question> searchQuestions(QuestionCriteria criteria) {
-            return storedQuestions.stream().filter(criteria::matches).toList();
+    @Test
+    void soloAdministradorYAutorPuedenEditar() throws Exception {
+        String id = createQuestion("gus");
+        mvc.perform(put("/preguntas/" + id).header("Authorization", bearer("x", "REVISOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cambiarEstadoLoPermiteRevisorPeroNoDocenteNiEstudiante() throws Exception {
+        String id = createQuestion("hugo");
+        for (String role : new String[] {"DOCENTE", "ESTUDIANTE"}) {
+            mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("x", role))
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"PENDIENTE_REVISION\"}"))
+                    .andExpect(status().isForbidden());
         }
+        mvc.perform(patch("/preguntas/" + id + "/estado").header("Authorization", bearer("rev", "REVISOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"state\":\"PENDIENTE_REVISION\"}"))
+                .andExpect(status().isOk());
+    }
 
-        @Override
-        public Optional<Question> findById(String id) {
-            return storedQuestions.stream().filter(q -> q.getId().equals(id)).findFirst();
-        }
-
-        @Override
-        public Question createQuestion(QuestionDraft draft, String username) {
-            Question q = new Question(
-                    "P-001",
-                    draft.getName(),
-                    draft.getContext(),
-                    draft.getDirectQuestion(),
-                    new QuestionDistractors(draft.getOptions(), draft.getCorrectIndex()),
-                    draft.getJustification(),
-                    draft.getBibliography(),
-                    draft.getCompetence(),
-                    draft.getTopic(),
-                    draft.getSubtopic(),
-                    draft.getDifficulty(),
-                    QuestionState.BORRADOR);
-            storedQuestions.add(q);
-            return q;
-        }
-
-        @Override
-        public Question updateQuestion(String id, QuestionDraft draft, String username) {
-            Question q = findById(id).orElseThrow();
-            q.modifyContent(
-                    draft.getName(),
-                    draft.getContext(),
-                    draft.getDirectQuestion(),
-                    new QuestionDistractors(draft.getOptions(), draft.getCorrectIndex()),
-                    draft.getJustification(),
-                    draft.getBibliography(),
-                    draft.getCompetence(),
-                    draft.getTopic(),
-                    draft.getSubtopic(),
-                    draft.getDifficulty());
-            return q;
-        }
-
-        @Override
-        public boolean changeState(String id, QuestionState newState, String username) {
-            Question q = findById(id).orElseThrow();
-            q.changeState(newState);
-            return true;
-        }
-
-        @Override
-        public List<QuestionStateChange> stateHistory(String id) {
-            return List.of();
-        }
-
-        @Override
-        public QuestionStatistics getStatistics() {
-            java.util.Map<QuestionState, Integer> counts = new java.util.EnumMap<>(QuestionState.class);
-            for (QuestionState state : QuestionState.values()) {
-                counts.put(state, 0);
-            }
-            for (Question q : storedQuestions) {
-                counts.merge(q.getState(), 1, Integer::sum);
-            }
-            return new QuestionStatistics(counts);
+    @Test
+    void consultarEstaPermitidoACualquierRolAutenticado() throws Exception {
+        String id = createQuestion("ines");
+        for (String role : new String[] {"DOCENTE", "ESTUDIANTE", "REVISOR"}) {
+            mvc.perform(get("/preguntas/" + id).header("Authorization", bearer("x", role)))
+                    .andExpect(status().isOk());
         }
     }
 }

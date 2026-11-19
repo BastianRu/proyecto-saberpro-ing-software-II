@@ -1,8 +1,9 @@
 package com.unicauca.lisw2t2g08.ui;
  
-import com.unicauca.lisw2t2g08.domain.User;
+import com.unicauca.lisw2t2g08.domain.Session;
+import com.unicauca.lisw2t2g08.service.AuthServiceUnavailableException;
 import com.unicauca.lisw2t2g08.service.AuthenticationException;
-import com.unicauca.lisw2t2g08.service.IUserService;
+import com.unicauca.lisw2t2g08.service.IAuthClient;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,15 +23,15 @@ public class LoginView {
   
 
   private final Stage stage;
-  private final IUserService userService;
+  private final IAuthClient authClient;
   private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
 
-  public LoginView(Stage stage, IUserService userService, QuestionBankWindows questionBank){
+  public LoginView(Stage stage, IAuthClient authClient, QuestionBankWindows questionBank){
     this.stage = stage;
-    this.userService = userService;
+    this.authClient = authClient;
     this.questionBank = questionBank;
     this.scene = buildScene();
   }
@@ -60,17 +61,17 @@ public class LoginView {
     Button loginButton = new Button("Iniciar Sesion");
     loginButton.setOnAction(event -> {
       try{
-        User user  = userService.login(loginField.getText(), passwordField.getText());
-        MainMenuView menuView = new MainMenuView(stage, user, userService, questionBank);
+        Session session = authClient.login(loginField.getText(), passwordField.getText());
+        MainMenuView menuView = new MainMenuView(stage, session, authClient, questionBank);
         stage.setScene(menuView.getScene());
-      } catch (AuthenticationException e) {
+      } catch (AuthenticationException | AuthServiceUnavailableException e) {
         errorLabel.setText(e.getMessage());
       }
     });
 
     Button goToRegisterButton = new Button("¿No tienes cuenta? Regístrate");
         goToRegisterButton.setOnAction(e -> {
-         RegisterView registerView = new RegisterView(stage, userService, questionBank);
+         RegisterView registerView = new RegisterView(stage, authClient, questionBank);
          stage.setScene(registerView.getScene());
         });
 

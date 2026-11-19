@@ -1,6 +1,8 @@
 package com.unicauca.lisw2t2g08.banco.domain;
 
 /**
+ * Capa de dominio.
+ *
  * Nivel de dificultad de una pregunta (RF-05).
  */
 public enum DifficultyLevel {
@@ -15,6 +17,9 @@ public enum DifficultyLevel {
         this.label = label;
     }
 
+    /**
+     * @return nombre legible del nivel, para presentarlo en la interfaz.
+     */
     public String getLabel() {
         return label;
     }

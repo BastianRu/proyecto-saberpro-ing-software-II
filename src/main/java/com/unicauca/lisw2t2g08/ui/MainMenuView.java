@@ -3,8 +3,8 @@ package com.unicauca.lisw2t2g08.ui;
 import java.util.List;
 
 import com.unicauca.lisw2t2g08.domain.Role;
-import com.unicauca.lisw2t2g08.domain.User;
-import com.unicauca.lisw2t2g08.service.IUserService;
+import com.unicauca.lisw2t2g08.domain.Session;
+import com.unicauca.lisw2t2g08.service.IAuthClient;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,16 +19,16 @@ import javafx.stage.Stage;
 public class MainMenuView {
 
   private final Stage stage;
-  private final User user;
-  private final IUserService userService;
+  private final Session user;
+  private final IAuthClient authClient;
   private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
-  public MainMenuView(Stage stage, User user, IUserService userService, QuestionBankWindows questionBank){
+  public MainMenuView(Stage stage, Session user, IAuthClient authClient, QuestionBankWindows questionBank){
     this.stage = stage;
     this.user = user;
-    this.userService = userService;
+    this.authClient = authClient;
     this.questionBank = questionBank;
     this.scene = buildScene();
   }
@@ -40,7 +40,7 @@ public class MainMenuView {
 
   private Scene buildScene(){
 
-    Label welcome = new Label("Bienvenido, " + user.getFullName() + " (" + user.getRole() + ")");
+    Label welcome = new Label("Bienvenido, " + user.getLogin() + " (" + user.getRole() + ")");
     welcome.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
 
 
@@ -69,7 +69,7 @@ public class MainMenuView {
     Button logoutButton = new Button("Cerrar sesión");
     logoutButton.setOnAction(e -> {
       questionBank.close();
-      LoginView loginView = new LoginView(stage, userService, questionBank);
+      LoginView loginView = new LoginView(stage, authClient, questionBank);
       stage.setScene(loginView.getScene());
     });
     layout.getChildren().add(logoutButton);

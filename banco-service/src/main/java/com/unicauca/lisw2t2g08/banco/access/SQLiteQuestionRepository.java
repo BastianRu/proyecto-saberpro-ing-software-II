@@ -4,19 +4,23 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.unicauca.lisw2t2g08.banco.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.banco.domain.Question;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionDistractors;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
-import com.unicauca.lisw2t2g08.banco.domain.QuestionStateChange;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStates;
 
 /**
  * Implementacion de IQuestionRepository usando JDBC para SQLite.
+ *
+ * Es la unica clase que sabe escribir SQL para preguntas. El historial de cambios de
+ * estado ya no se guarda aqui: es responsabilidad del servicio de Auditoria. Las opciones de
+ * respuesta se guardan en la tabla question_options, una fila por opcion.
  */
 public class SQLiteQuestionRepository implements IQuestionRepository {
 
@@ -74,7 +78,7 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
                 ps.setString(2, question.getName());
                 ps.setString(3, question.getStatement());
                 ps.setInt(4, question.getDistractors().getCorrectIndex());
-                ps.setString(5, question.getState().name());
+                ps.setString(5, question.getState().getCode());
                 bindContent(ps, 6, question);
                 ps.executeUpdate();
             }
@@ -97,7 +101,7 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
                 ps.setString(1, question.getName());
                 ps.setString(2, question.getStatement());
                 ps.setInt(3, question.getDistractors().getCorrectIndex());
-                ps.setString(4, question.getState().name());
+                ps.setString(4, question.getState().getCode());
                 bindContent(ps, 5, question);
                 ps.setString(12, question.getId());
                 updated[0] = ps.executeUpdate() > 0;
@@ -111,57 +115,21 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public synchronized void saveStateChange(QuestionStateChange change) {
-        if (change == null) {
-            return;
-        }
-        String sql = "INSERT INTO question_state_history (question_id, from_state, to_state,"
-                + " username, changed_at) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, change.getQuestionId());
-            ps.setString(2, change.getFromState() == null ? null : change.getFromState().name());
-            ps.setString(3, change.getToState().name());
-            ps.setString(4, change.getUsername());
-            ps.setString(5, change.getChangedAt().toString());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al registrar el cambio de estado de la pregunta: "
-                    + change.getQuestionId(), e);
-        }
-    }
-
-    @Override
-    public synchronized List<QuestionStateChange> findStateHistory(String questionId) {
-        if (questionId == null) {
-            return List.of();
-        }
-        String sql = "SELECT question_id, from_state, to_state, username, changed_at"
-                + " FROM question_state_history WHERE question_id = ? ORDER BY id";
-        List<QuestionStateChange> history = new ArrayList<>();
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, questionId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    history.add(mapStateChangeRow(rs));
-                }
+    public synchronized Map<String, Integer> countByState() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        String sql = "SELECT state, COUNT(*) AS total FROM questions GROUP BY state";
+        try (PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                counts.put(rs.getString("state"), rs.getInt("total"));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Error al consultar el historial de la pregunta: "
-                    + questionId, e);
+            throw new RuntimeException("Error al contar las preguntas por estado", e);
         }
-        return history;
+        return counts;
     }
 
-    private QuestionStateChange mapStateChangeRow(ResultSet rs) throws SQLException {
-        String from = rs.getString("from_state");
-        return new QuestionStateChange(
-                rs.getString("question_id"),
-                from == null ? null : QuestionState.valueOf(from),
-                QuestionState.valueOf(rs.getString("to_state")),
-                rs.getString("username"),
-                LocalDateTime.parse(rs.getString("changed_at")));
-    }
-
+    // Asigna desde "first" los siete campos de contenido de RF-05
     private void bindContent(PreparedStatement ps, int first, Question question) throws SQLException {
         ps.setString(first, question.getContext());
         ps.setString(first + 1, question.getJustification());
@@ -208,6 +176,7 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
         return options;
     }
 
+    // Convierte una fila del ResultSet (con sus opciones) en un objeto Question
     private Question mapRow(ResultSet rs) throws SQLException {
         String id = rs.getString("id");
         String difficulty = rs.getString("difficulty");
@@ -223,9 +192,10 @@ public class SQLiteQuestionRepository implements IQuestionRepository {
                 rs.getString("topic"),
                 rs.getString("subtopic"),
                 (difficulty == null || difficulty.isBlank()) ? null : DifficultyLevel.valueOf(difficulty),
-                QuestionState.valueOf(rs.getString("state")));
+                QuestionStates.fromCode(rs.getString("state")));
     }
 
+    // Ejecuta varias sentencias como una sola unidad: o se aplican todas o ninguna
     private void inTransaction(SqlWork work, String errorMessage) {
         try {
             boolean previousAutoCommit = connection.getAutoCommit();

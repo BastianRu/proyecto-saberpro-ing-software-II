@@ -6,9 +6,12 @@ import com.unicauca.lisw2t2g08.banco.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.banco.domain.Question;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionDistractors;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStates;
 
 /**
- * Preguntas de ejemplo para inicializar la base de datos de preguntas si esta vacia.
+ * Preguntas de ejemplo para demos. Se cargan solo si banco.sample-data.enabled=true y la base esta vacia.
+ * Se insertan directo en el repositorio, sin publicar eventos: Revision y Auditoria no se enteran de ellas,
+ * por eso no se usan en el flujo normal (una pregunta sembrada en Pendiente de revision no tendria revision).
  */
 public final class QuestionSampleData {
 
@@ -27,7 +30,7 @@ public final class QuestionSampleData {
                         "Eliminar UML",
                         "Crear interfaces graficas",
                         "Desplegar en la nube"), 1,
-                "Diseño de software", "Diseño guiado por el dominio", "DDD", DifficultyLevel.MEDIA, QuestionState.BORRADOR));
+                "Diseño de software", "Diseño guiado por el dominio", "DDD", DifficultyLevel.MEDIA, QuestionStates.BORRADOR));
 
         repository.save(question("P-002", "Patron Observer",
                 "¿Que problema resuelve el patron Observer?",
@@ -37,7 +40,7 @@ public final class QuestionSampleData {
                         "Convertir una interfaz en otra",
                         "Restringir una clase a una unica instancia",
                         "Encapsular llamadas remotas"), 1,
-                "Diseño de software", "Patrones de diseño", "Observer", DifficultyLevel.MEDIA, QuestionState.BORRADOR));
+                "Diseño de software", "Patrones de diseño", "Observer", DifficultyLevel.MEDIA, QuestionStates.BORRADOR));
 
         repository.save(question("P-003", "Arquitectura en capas",
                 "¿Cual es la responsabilidad de la capa de acceso a datos?",
@@ -47,7 +50,7 @@ public final class QuestionSampleData {
                         "Gestionar la persistencia de la informacion",
                         "Configurar el sistema operativo",
                         "Renderizar componentes visuales"), 2,
-                "Arquitectura de software", "Arquitectura en capas", "Capa de acceso a datos", DifficultyLevel.BAJA, QuestionState.PENDIENTE_REVISION));
+                "Arquitectura de software", "Arquitectura en capas", "Capa de acceso a datos", DifficultyLevel.BAJA, QuestionStates.PENDIENTE_REVISION));
 
         repository.save(question("P-004", "Principio SRP",
                 "¿Que establece el principio de responsabilidad unica?",
@@ -57,7 +60,7 @@ public final class QuestionSampleData {
                         "Un metodo debe tener un solo parametro",
                         "Un paquete debe tener una sola clase",
                         "Un modulo debe tener un solo autor"), 0,
-                "Diseño de software", "Principios SOLID", "SRP", DifficultyLevel.BAJA, QuestionState.EN_REVISION));
+                "Diseño de software", "Principios SOLID", "SRP", DifficultyLevel.BAJA, QuestionStates.EN_REVISION));
 
         repository.save(question("P-005", "Principio DIP",
                 "¿De que deben depender los modulos de alto nivel?",
@@ -67,7 +70,7 @@ public final class QuestionSampleData {
                         "Del framework de persistencia",
                         "De la interfaz grafica",
                         "De la base de datos relacional"), 1,
-                "Diseño de software", "Principios SOLID", "DIP", DifficultyLevel.MEDIA, QuestionState.RECHAZADA));
+                "Diseño de software", "Principios SOLID", "DIP", DifficultyLevel.MEDIA, QuestionStates.RECHAZADA));
 
         repository.save(question("P-006", "Pruebas unitarias",
                 "¿Que caracteriza a una prueba unitaria?",
@@ -77,7 +80,7 @@ public final class QuestionSampleData {
                         "Verifica de forma aislada una unidad de codigo",
                         "Se ejecuta unicamente de forma manual",
                         "Prueba la red de comunicacion"), 2,
-                "Calidad de software", "Pruebas", "Pruebas unitarias", DifficultyLevel.BAJA, QuestionState.ARCHIVADA));
+                "Calidad de software", "Pruebas", "Pruebas unitarias", DifficultyLevel.BAJA, QuestionStates.ARCHIVADA));
 
         repository.save(question("P-007", "Micro patron MVC",
                 "¿Que responsabilidad tiene el controlador en MVC?",
@@ -87,7 +90,7 @@ public final class QuestionSampleData {
                         "Coordinar la vista con el modelo",
                         "Definir el esquema de la base de datos",
                         "Garantizar la seguridad criptografica"), 2,
-                "Arquitectura de software", "Patrones arquitectónicos", "MVC", DifficultyLevel.MEDIA, QuestionState.PUBLICADA));
+                "Arquitectura de software", "Patrones arquitectónicos", "MVC", DifficultyLevel.MEDIA, QuestionStates.PUBLICADA));
 
         repository.save(question("P-008", "Saber Pro",
                 "¿Que competencia evalua el modulo de razonamiento cuantitativo?",
@@ -97,7 +100,7 @@ public final class QuestionSampleData {
                         "El dominio de un segundo idioma",
                         "La redaccion de ensayos argumentativos",
                         "El diseño de software orientado a objetos"), 1,
-                "Razonamiento cuantitativo", "Saber Pro", "Competencias genéricas", DifficultyLevel.ALTA, QuestionState.APROBADA));
+                "Razonamiento cuantitativo", "Saber Pro", "Competencias genéricas", DifficultyLevel.ALTA, QuestionStates.APROBADA));
     }
 
     private static Question question(String id, String name, String statement,
