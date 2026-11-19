@@ -7,6 +7,12 @@
 > cada uno con su propio `pom.xml`. Para levantarlos, ver
 > [`docs/EJECUCION.md`](docs/EJECUCION.md). Los servicios no dependen del código
 > de `src/`.
+>
+> Documentación de la iteración 2: [`RULES.md`](RULES.md),
+> [`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md),
+> [`docs/EJECUCION.md`](docs/EJECUCION.md),
+> [`docs/REDUNDANCIAS.md`](docs/REDUNDANCIAS.md) y
+> [`docs/PENDIENTES.md`](docs/PENDIENTES.md).
 
 La primera iteración es una aplicación de escritorio en Java (JavaFX + SQLite)
 construida siguiendo los principios SOLID, con Inversión de Dependencias como

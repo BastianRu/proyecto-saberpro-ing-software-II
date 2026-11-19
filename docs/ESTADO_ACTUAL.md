@@ -57,3 +57,23 @@ registran aquí y, cuando aplica, en `docs/PENDIENTES.md`.
 5. **No hay consumidores de los eventos RabbitMQ** (`questions.exchange`). El banco publica
    y nadie escucha. Se documenta en pendientes, sin crear servicios por iniciativa propia.
 6. **`RULES.md` y los scripts de punta a punta no existían**; se crean en esta rama.
+
+## 5. Estado final de la rama
+
+Después de la integración y de los cambios de esta rama:
+
+| Módulo | Pruebas | Fallos | Errores | Resultado |
+|---|---:|---:|---:|---|
+| `auth-service` | 21 | 0 | 0 | Pasa |
+| `validacion-service` | 44 | 0 | 0 | Pasa |
+| `banco-service` | 31 | 0 | 0 | Pasa |
+| **Total** | **96** | **0** | **0** | **Pasa** |
+
+Los 21 de `auth-service` incluyen la prueba de contrato con vector fijo; los 31
+de `banco-service` incluyen las pruebas de `503` (servicio caído y tiempo
+agotado) y la de contrato del token.
+
+La prueba `scripts/e2e.sh`, ejecutada con los tres servicios en marcha y sin
+RabbitMQ, terminó con **14 comprobaciones pasadas y 0 fallidas**. El banco
+registró las advertencias esperadas de RabbitMQ y continuó con las operaciones.
+
