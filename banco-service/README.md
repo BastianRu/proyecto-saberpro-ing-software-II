@@ -7,7 +7,7 @@ Gestiona el ciclo de vida completo de las preguntas de selección múltiple con 
 ## Responsabilidades del Servicio
 
 1. **Gestión de Preguntas:** Crear, consultar y modificar preguntas con soporte de 5 opciones (4 distractores y 1 correcta) y metadatos pedagógicos.
-2. **Validación Estructural Delegada:** Invoca síncronamente al microservicio `validacion-service` (`POST /validaciones` en `http://localhost:8083`) antes de persistir cualquier borrador.
+2. **Validación Estructural Delegada:** Invoca síncronamente al microservicio `validacion-service` (`POST /validaciones` en `http://localhost:8083`) antes de persistir cualquier borrador. Si una regla rechaza el borrador responde `422`; si el servicio no responde dentro de 5 segundos o está caído responde `503`.
 3. **Máquina de Estados y Auditoría (HU04):** Aplica las transiciones válidas entre los 7 estados (`BORRADOR`, `PENDIENTE_REVISION`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `PUBLICADA`, `ARCHIVADA`), registrando el usuario y la fecha en `question_state_history`.
 4. **Seguridad y Control de Acceso:** Verifica la firma HMAC-SHA256 de los tokens emitidos por `auth-service` y autoriza operaciones según el rol (`ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR`, etc.).
 5. **Publicación Asíncrona de Eventos:** Publica eventos de dominio (`QUESTION_CREATED`, `QUESTION_UPDATED`, `QUESTION_STATE_CHANGED`) en RabbitMQ (`questions.exchange`).
@@ -97,6 +97,22 @@ Consulta el historial cronológico de auditoría de cambios de estado.
 ### 7. `GET /preguntas/estadisticas`
 Devuelve el conteo y porcentajes de preguntas agrupadas por estado.
 - **Respuesta:** `200 OK` con conteos individuales y totales.
+
+---
+
+## Manejo de errores
+
+| Código | Cuándo |
+|---:|---|
+| `400` | Cuerpo o transición inválida, o solicitud mal formada. |
+| `401` | Falta el token o es inválido/expirado. |
+| `403` | El rol autenticado no tiene permiso para la operación. |
+| `404` | La pregunta solicitada no existe. |
+| `422` | `validacion-service` respondió que una regla estructural falla. |
+| `503` | No fue posible comunicarse con `validacion-service` (caído o tiempo de espera agotado). |
+
+El cuerpo de error es `{"error": "...", "details": []}`; cuando el fallo proviene de
+las reglas de validación se conserva el contrato `{"valid": false, "errors": [...]}`.
 
 ---
 

@@ -25,15 +25,24 @@ public class RestValidationClient implements IValidationClient {
     private final String baseUrl;
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final Duration timeout;
 
     public RestValidationClient(String baseUrl) {
-        this(baseUrl, HttpClient.newBuilder().connectTimeout(TIMEOUT).build(), new ObjectMapper());
+        this(baseUrl, HttpClient.newBuilder().connectTimeout(TIMEOUT).build(), new ObjectMapper(), TIMEOUT);
     }
 
     public RestValidationClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper) {
+        this(baseUrl, httpClient, objectMapper, TIMEOUT);
+    }
+
+    RestValidationClient(String baseUrl, HttpClient httpClient, ObjectMapper objectMapper, Duration timeout) {
+        if (timeout == null || timeout.isZero() || timeout.isNegative()) {
+            throw new IllegalArgumentException("El tiempo de espera de validacion debe ser positivo");
+        }
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+        this.timeout = timeout;
     }
 
     @Override
@@ -59,7 +68,7 @@ public class RestValidationClient implements IValidationClient {
             String jsonBody = objectMapper.writeValueAsString(body);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/validaciones"))
-                    .timeout(TIMEOUT)
+                    .timeout(timeout)
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
@@ -84,10 +93,11 @@ public class RestValidationClient implements IValidationClient {
             throw new ValidationException(errors);
 
         } catch (IOException e) {
-            throw new IllegalStateException("No fue posible comunicarse con el servicio de validacion: " + e.getMessage(), e);
+            throw new ValidationServiceUnavailableException(
+                    "No fue posible comunicarse con el servicio de validacion: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Peticion de validacion interrumpida", e);
+            throw new ValidationServiceUnavailableException("Peticion de validacion interrumpida", e);
         }
     }
 }

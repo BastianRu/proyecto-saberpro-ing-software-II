@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.unicauca.lisw2t2g08.banco.client.ValidationException;
+import com.unicauca.lisw2t2g08.banco.client.ValidationServiceUnavailableException;
 import com.unicauca.lisw2t2g08.banco.security.ForbiddenException;
 import com.unicauca.lisw2t2g08.banco.security.UnauthorizedException;
 
@@ -32,6 +33,12 @@ public class ApiExceptionHandler {
                 "valid", false,
                 "errors", ex.getErrors()
         );
+    }
+
+    @ExceptionHandler(ValidationServiceUnavailableException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorResponse handleValidationServiceUnavailable(ValidationServiceUnavailableException ex) {
+        return new ErrorResponse(ex.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
