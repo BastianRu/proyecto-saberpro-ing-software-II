@@ -1,145 +1,64 @@
 # banco-service
 
-Microservicio del **Banco de Preguntas** del proyecto *Banco de Preguntas Saber Pro* (Ingeniería de Software II, Universidad del Cauca).
+Microservicio del **Banco de Preguntas** (puerto `8082`, base de datos propia `banco.db`).
 
-Gestiona el ciclo de vida completo de las preguntas de selección múltiple con única respuesta: creación con validación estructural delegada, modificación restringida a borradores, transiciones controladas por máquina de estados, persistencia en SQLite (`banco.db`), registro histórico de auditoría y publicación de eventos asíncronos en RabbitMQ.
+Gestiona el ciclo de vida de las preguntas de selección múltiple con única respuesta. **La validación estructural
+(HU03) está embebida**: la tubería de filtros corre en el mismo proceso, sin llamada de red ni servicio aparte.
 
-## Responsabilidades del Servicio
+## Responsabilidades
 
-1. **Gestión de Preguntas:** Crear, consultar y modificar preguntas con soporte de 5 opciones (4 distractores y 1 correcta) y metadatos pedagógicos.
-2. **Validación Estructural Delegada:** Invoca síncronamente al microservicio `validacion-service` (`POST /validaciones` en `http://localhost:8083`) antes de persistir cualquier borrador. Si una regla rechaza el borrador responde `422`; si el servicio no responde dentro de 5 segundos o está caído responde `503`.
-3. **Máquina de Estados y Auditoría (HU04):** Aplica las transiciones válidas entre los 7 estados (`BORRADOR`, `PENDIENTE_REVISION`, `EN_REVISION`, `APROBADA`, `RECHAZADA`, `PUBLICADA`, `ARCHIVADA`), registrando el usuario y la fecha en `question_state_history`.
-4. **Seguridad y Control de Acceso:** Verifica la firma HMAC-SHA256 de los tokens emitidos por `auth-service` y autoriza operaciones según el rol (`ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR`, etc.).
-5. **Publicación Asíncrona de Eventos:** Publica eventos de dominio (`QUESTION_CREATED`, `QUESTION_UPDATED`, `QUESTION_STATE_CHANGED`) en RabbitMQ (`questions.exchange`).
+1. **Preguntas (HU02):** crear, consultar con filtros y modificar (solo en Borrador).
+2. **Validación estructural (HU03):** pipeline de 7 filtros (RF-05, RF-08 a RF-13). Si falla, responde `422` con la lista de errores y no guarda.
+3. **Ciclo de vida (HU04):** 7 estados implementados con el **patrón State** (una clase por estado, doble despacho; sin `switch` ni tabla de transiciones).
+4. **Eventos:** publica `QuestionCreated` y `QuestionStateChanged` en RabbitMQ (exchange `saberpro.events`). Los consumen Revisión y Auditoría.
+5. **Seguridad (HU01/RF-03):** verifica localmente el token firmado por `auth-service` y aplica la matriz de roles.
 
-## Requisitos
+## Matriz de roles
 
-- JDK 17 o superior.
-- Maven 3.8 o superior.
-- Microservicio `validacion-service` ejecutándose en el puerto 8083.
-- (Opcional en desarrollo) RabbitMQ ejecutándose en `localhost:5672`.
+| Operación | Roles |
+|---|---|
+| `POST /preguntas`, `PUT /preguntas/{id}` | `ADMINISTRADOR`, `AUTOR_PREGUNTAS` |
+| `PATCH /preguntas/{id}/estado` | `ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR` (los revisores lo hacen vía `revision-service`) |
+| `GET` (consultas y estadísticas) | cualquier usuario autenticado |
+
+Sin token válido: `401`. Con token pero sin el rol: `403`.
+
+## Endpoints
+
+| Método | Ruta | Respuestas |
+|---|---|---|
+| `POST` | `/preguntas` | `201`, `422` (validación), `403` |
+| `GET` | `/preguntas?state&difficulty&competence&topic&subtopic&text` | `200` |
+| `GET` | `/preguntas/{id}` | `200`, `404` |
+| `PUT` | `/preguntas/{id}` | `200`, `409` (no está en Borrador), `422`, `404` |
+| `PATCH` | `/preguntas/{id}/estado` — cuerpo `{"state":"PENDIENTE_REVISION"}` | `200`, `409` (transición inválida), `400` (estado desconocido), `404` |
+| `GET` | `/preguntas/estadisticas` | `200` |
+
+Todas exigen `Authorization: Bearer <token>`. El historial de cambios de estado **ya no está aquí**: lo sirve `auditoria-service`.
+
+## Máquina de estados
+
+```
+BORRADOR → PENDIENTE_REVISION → EN_REVISION → APROBADA → PUBLICADA → ARCHIVADA
+              ↓ (devolver)          ↓                ↘ ARCHIVADA
+           BORRADOR              RECHAZADA → BORRADOR | ARCHIVADA
+```
+`ARCHIVADA` es final. No existe borrado físico (RNF-16).
 
 ## Ejecución
 
-Desde la carpeta `banco-service`:
-
 ```bash
-# Compilar y ejecutar pruebas
+docker compose up -d        # RabbitMQ (desde la raíz del repositorio)
+cd banco-service
 mvn test
-
-# Iniciar el microservicio
-mvn spring-boot:run
+mvn spring-boot:run         # http://localhost:8082
 ```
 
-El servicio queda escuchando en `http://localhost:8082`.
+Configuración en `application.properties`: `banco.db.url`, `auth.token.secret` (el mismo de `auth-service`), RabbitMQ y
+`banco.sample-data.enabled` (preguntas de ejemplo para demos; apagado por defecto porque no publica eventos).
 
-## Endpoints de la API REST
+Colección de Postman con todo el flujo: `postman/saberpro-microservicios.postman_collection.json` (en la raíz).
 
-### 1. `GET /preguntas`
-Consulta y filtra preguntas del banco.
-- **Parámetros opcionales de consulta:** `state`, `difficulty`, `competence`, `topic`, `subtopic`, `text`.
-- **Respuesta:** `200 OK` con la lista de `QuestionResponse`.
-
-### 2. `GET /preguntas/{id}`
-Consulta el detalle de una pregunta por su identificador (ej. `P-001`).
-- **Respuesta:** `200 OK` o `404 Not Found`.
-
-### 3. `POST /preguntas`
-Crea una nueva pregunta en estado `BORRADOR`.
-- **Encabezado obligatorio:** `Authorization: Bearer <token>`
-- **Roles permitidos:** `ADMINISTRADOR`, `AUTOR_PREGUNTAS`.
-- **Cuerpo JSON:**
-```json
-{
-  "name": "Pregunta sobre Pipeline",
-  "context": "El patron Pipeline encadena filtros que procesan datos en secuencia.",
-  "directQuestion": "Cual es la ventaja principal de este patron?",
-  "options": [
-    "Permite componer validaciones independientes",
-    "Obliga a reescribir todo el sistema",
-    "Elimina la necesidad de pruebas",
-    "Impide reutilizar componentes",
-    "Requiere una base de datos distribuida"
-  ],
-  "correctIndex": 0,
-  "justification": "Permite componer filtros desacoplados.",
-  "bibliography": "Gamma et al. Design Patterns.",
-  "competence": "Diseno de software",
-  "topic": "Patrones de diseno",
-  "subtopic": "Pipeline",
-  "difficulty": "MEDIA"
-}
-```
-- **Respuesta:** `201 Created` con la pregunta creada y su id asignado (ej. `P-009`).
-
-### 4. `PUT /preguntas/{id}`
-Modifica los datos de una pregunta existente en estado `BORRADOR`.
-- **Encabezado obligatorio:** `Authorization: Bearer <token>`
-- **Roles permitidos:** `ADMINISTRADOR`, `AUTOR_PREGUNTAS`.
-- **Respuesta:** `200 OK` o `400 Bad Request` si la pregunta ya no está en `BORRADOR`.
-
-### 5. `PATCH /preguntas/{id}/estado`
-Aplica una transición de estado en el ciclo de vida de la pregunta.
-- **Encabezado obligatorio:** `Authorization: Bearer <token>`
-- **Roles permitidos:** `ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR`.
-- **Cuerpo JSON:**
-```json
-{
-  "state": "PENDIENTE_REVISION"
-}
-```
-- **Respuesta:** `200 OK` con el nuevo estado aplicado.
-
-### 6. `GET /preguntas/{id}/historial`
-Consulta el historial cronológico de auditoría de cambios de estado.
-- **Respuesta:** `200 OK` con la lista de transiciones (`fromState`, `toState`, `username`, `changedAt`, `description`).
-
-### 7. `GET /preguntas/estadisticas`
-Devuelve el conteo y porcentajes de preguntas agrupadas por estado.
-- **Respuesta:** `200 OK` con conteos individuales y totales.
-
----
-
-## Manejo de errores
-
-| Código | Cuándo |
-|---:|---|
-| `400` | Cuerpo o transición inválida, o solicitud mal formada. |
-| `401` | Falta el token o es inválido/expirado. |
-| `403` | El rol autenticado no tiene permiso para la operación. |
-| `404` | La pregunta solicitada no existe. |
-| `422` | `validacion-service` respondió que una regla estructural falla. |
-| `503` | No fue posible comunicarse con `validacion-service` (caído o tiempo de espera agotado). |
-
-El cuerpo de error es `{"error": "...", "details": []}`; cuando el fallo proviene de
-las reglas de validación se conserva el contrato `{"valid": false, "errors": [...]}`.
-
----
-
-## Estructura del Proyecto
-
-```
-banco-service/
-├── pom.xml
-├── README.md
-├── postman/
-│   └── banco-service.postman_collection.json
-└── src/
-    ├── main/
-    │   ├── java/com/unicauca/lisw2t2g08/banco/
-    │   │   ├── BancoServiceApplication.java
-    │   │   ├── access/        (IQuestionRepository, SQLiteQuestionRepository, QuestionSampleData)
-    │   │   ├── api/           (QuestionController, ApiExceptionHandler, DTOs)
-    │   │   ├── client/        (IValidationClient, RestValidationClient, ValidationException)
-    │   │   ├── config/        (BancoConfig - SQLite, Beans, RabbitMQ)
-    │   │   ├── domain/        (Question, QuestionDraft, QuestionState, QuestionDistractors, etc.)
-    │   │   ├── messaging/     (QuestionEvent, IQuestionEventPublisher, RabbitMQQuestionEventPublisher)
-    │   │   └── security/      (TokenVerifier, UnauthorizedException, ForbiddenException)
-    │   └── resources/
-    │       └── application.properties
-    └── test/java/com/unicauca/lisw2t2g08/banco/
-        ├── access/            (SQLiteQuestionRepositoryTest)
-        ├── api/               (QuestionControllerTest)
-        ├── security/          (TokenVerifierTest)
-        └── service/           (QuestionServiceTest)
-```
+## Límites conocidos
+- Si RabbitMQ está caído al guardar, el cambio se persiste pero el evento se pierde (se registra una advertencia). La solución completa sería un *outbox* transaccional.
+- SQLite con una única conexión compartida: no admite varias instancias del servicio sobre el mismo archivo.

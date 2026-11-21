@@ -44,7 +44,8 @@ public class AuthConfig {
     @Bean
     public TokenSigner tokenSigner(@Value("${auth.token.secret}") String secret,
                                    @Value("${auth.token.ttl-minutes}") long ttlMinutes) {
-        return new TokenSigner(secret, Duration.ofMinutes(ttlMinutes), Clock.systemDefaultZone());
+        // UTC: el vencimiento viaja sin zona y los demas servicios lo verifican contra UTC
+        return new TokenSigner(secret, Duration.ofMinutes(ttlMinutes), Clock.systemUTC());
     }
 
     @Bean

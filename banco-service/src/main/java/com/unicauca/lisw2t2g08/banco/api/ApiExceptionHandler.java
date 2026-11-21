@@ -1,79 +1,52 @@
 package com.unicauca.lisw2t2g08.banco.api;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.unicauca.lisw2t2g08.banco.client.ValidationException;
-import com.unicauca.lisw2t2g08.banco.client.ValidationServiceUnavailableException;
+import com.unicauca.lisw2t2g08.banco.domain.InvalidStateOperationException;
+import com.unicauca.lisw2t2g08.banco.pipeline.ValidationException;
 import com.unicauca.lisw2t2g08.banco.security.ForbiddenException;
-import com.unicauca.lisw2t2g08.banco.security.UnauthorizedException;
+import com.unicauca.lisw2t2g08.banco.service.QuestionNotFoundException;
 
-/**
- * Traduce excepciones de negocio y seguridad a codigos y cuerpos HTTP apropiados.
- */
+/** Traduce las excepciones del dominio a respuestas HTTP. */
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
-    public record ErrorResponse(String error, List<String> details) {
-        public ErrorResponse(String error) {
-            this(error, List.of());
-        }
-    }
+    public record ErrorResponse(String message, List<String> errors) { }
 
+    // 422: la solicitud está bien formada pero el borrador incumple las reglas estructurales (RF-05, RF-08 a RF-13)
     @ExceptionHandler(ValidationException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-    public Map<String, Object> handleValidation(ValidationException ex) {
-        return Map.of(
-                "valid", false,
-                "errors", ex.getErrors()
-        );
-    }
-
-    @ExceptionHandler(ValidationServiceUnavailableException.class)
-    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public ErrorResponse handleValidationServiceUnavailable(ValidationServiceUnavailableException ex) {
-        return new ErrorResponse(ex.getMessage());
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotFound(ResourceNotFoundException ex) {
-        return new ErrorResponse(ex.getMessage());
-    }
-
-    @ExceptionHandler(UnauthorizedException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleUnauthorized(UnauthorizedException ex) {
-        return new ErrorResponse(ex.getMessage());
+    public ResponseEntity<ErrorResponse> validation(ValidationException e) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, "La pregunta no supera la validación estructural", e.getErrors());
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ErrorResponse handleForbidden(ForbiddenException ex) {
-        return new ErrorResponse(ex.getMessage());
+    public ResponseEntity<ErrorResponse> forbidden(ForbiddenException e) {
+        return build(HttpStatus.FORBIDDEN, e.getMessage(), List.of());
     }
 
-    @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequest(RuntimeException ex) {
-        return new ErrorResponse(ex.getMessage());
+    @ExceptionHandler(QuestionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> notFound(QuestionNotFoundException e) {
+        return build(HttpStatus.NOT_FOUND, e.getMessage(), List.of());
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadJson(HttpMessageNotReadableException ex) {
-        return new ErrorResponse("Solicitud mal formada");
+    @ExceptionHandler(InvalidStateOperationException.class)
+    public ResponseEntity<ErrorResponse> conflict(InvalidStateOperationException e) {
+        return build(HttpStatus.CONFLICT, e.getMessage(), List.of());
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleGeneric(Exception ex) {
-        return new ErrorResponse("Error interno del servidor");
+    @ExceptionHandler({IllegalArgumentException.class, HttpMessageNotReadableException.class})
+    public ResponseEntity<ErrorResponse> badRequest(Exception e) {
+        String message = e instanceof IllegalArgumentException ? e.getMessage() : "Solicitud mal formada";
+        return build(HttpStatus.BAD_REQUEST, message, List.of());
+    }
+
+    private static ResponseEntity<ErrorResponse> build(HttpStatus status, String message, List<String> errors) {
+        return ResponseEntity.status(status).body(new ErrorResponse(message, errors));
     }
 }

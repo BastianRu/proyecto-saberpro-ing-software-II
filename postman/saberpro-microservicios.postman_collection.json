@@ -1,0 +1,463 @@
+{
+  "info": {
+    "name": "Banco de Preguntas Saber Pro - microservicios",
+    "description": "Flujo completo de la iteracion 2. Orden sugerido: 1) registrar y hacer login como autor (guarda {{token}}), 2) crear la pregunta y enviarla a revision, 3) login como revisor, tomar la revision y emitir el dictamen, 4) consultar el historial en Auditoria. Requiere RabbitMQ (docker compose up -d) y los cuatro servicios en ejecucion.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "login",
+      "value": ""
+    },
+    {
+      "key": "questionId",
+      "value": "P-001"
+    },
+    {
+      "key": "reviewId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. auth-service (8081)",
+      "item": [
+        {
+          "name": "Registrar autor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/usuarios"
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"ana\",\n  \"fullName\": \"Ana Autora\",\n  \"role\": \"AUTOR_PREGUNTAS\",\n  \"password\": \"Clave123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Registrar revisor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/usuarios"
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"beto\",\n  \"fullName\": \"Beto Revisor\",\n  \"role\": \"REVISOR\",\n  \"password\": \"Clave123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login como autor (ana)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/login"
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"ana\",\n  \"password\": \"Clave123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "pm.collectionVariables.set('token', d.token);",
+                  "pm.collectionVariables.set('login', d.subject);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login como revisor (beto)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8081/login"
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"beto\",\n  \"password\": \"Clave123!\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "pm.collectionVariables.set('token', d.token);",
+                  "pm.collectionVariables.set('login', d.subject);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8081/usuarios"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. banco-service (8082)",
+      "item": [
+        {
+          "name": "Crear pregunta (autor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8082/preguntas"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pregunta sobre Pipeline\",\n  \"context\": \"El patron Pipeline encadena filtros que procesan datos en secuencia.\",\n  \"directQuestion\": \"Cual es la ventaja principal de este patron?\",\n  \"options\": [\n    \"Permite componer validaciones independientes\",\n    \"Obliga a reescribir todo el sistema\",\n    \"Elimina la necesidad de pruebas\",\n    \"Impide reutilizar componentes\",\n    \"Requiere una base de datos distribuida\"\n  ],\n  \"correctIndex\": 0,\n  \"justification\": \"Permite componer filtros desacoplados.\",\n  \"bibliography\": \"Gamma et al. Design Patterns.\",\n  \"competence\": \"Diseno de software\",\n  \"topic\": \"Patrones de diseno\",\n  \"subtopic\": \"Pipeline\",\n  \"difficulty\": \"MEDIA\"\n}"
+            },
+            "description": "Roles: ADMINISTRADOR, AUTOR_PREGUNTAS. 422 si no supera la validacion estructural."
+          }
+        },
+        {
+          "name": "Listar / filtrar preguntas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/preguntas?state=BORRADOR&difficulty=MEDIA"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener pregunta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/preguntas/{{questionId}}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Editar pregunta (solo Borrador)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8082/preguntas/{{questionId}}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pregunta sobre Pipeline\",\n  \"context\": \"El patron Pipeline encadena filtros que procesan datos en secuencia.\",\n  \"directQuestion\": \"Cual es la ventaja principal de este patron?\",\n  \"options\": [\n    \"Permite componer validaciones independientes\",\n    \"Obliga a reescribir todo el sistema\",\n    \"Elimina la necesidad de pruebas\",\n    \"Impide reutilizar componentes\",\n    \"Requiere una base de datos distribuida\"\n  ],\n  \"correctIndex\": 0,\n  \"justification\": \"Permite componer filtros desacoplados.\",\n  \"bibliography\": \"Gamma et al. Design Patterns.\",\n  \"competence\": \"Diseno de software\",\n  \"topic\": \"Patrones de diseno\",\n  \"subtopic\": \"Pipeline\",\n  \"difficulty\": \"MEDIA\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Enviar a revision (autor)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8082/preguntas/{{questionId}}/estado"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state\": \"PENDIENTE_REVISION\"\n}"
+            },
+            "description": "Roles: ADMINISTRADOR, AUTOR_PREGUNTAS, REVISOR. Publica QuestionStateChanged."
+          }
+        },
+        {
+          "name": "Estadisticas por estado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/preguntas/estadisticas"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. revision-service (8083)",
+      "item": [
+        {
+          "name": "Revisiones pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/revisiones?status=PENDIENTE"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tomar revision (revisor)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/revisiones/{{reviewId}}/tomar"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Pasa la pregunta a EN_REVISION en el Banco. Un revisor no puede tomar su propia pregunta."
+          }
+        },
+        {
+          "name": "Dictamen: aprobar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8083/revisiones/{{reviewId}}/dictamen"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"APROBAR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Dictamen: rechazar (exige observaciones)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8083/revisiones/{{reviewId}}/dictamen"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"RECHAZAR\",\n  \"observations\": \"La justificacion no sustenta la respuesta correcta.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Historial de revisiones de una pregunta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/revisiones/preguntas/{{questionId}}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. auditoria-service (8084)",
+      "item": [
+        {
+          "name": "Historial de una pregunta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8084/auditoria/preguntas/{{questionId}}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Eventos QuestionCreated y QuestionStateChanged, en orden cronologico."
+          }
+        }
+      ]
+    }
+  ]
+}

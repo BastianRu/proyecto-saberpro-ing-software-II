@@ -10,26 +10,19 @@ import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.unicauca.lisw2t2g08.banco.domain.AuthToken;
-import com.unicauca.lisw2t2g08.banco.domain.Role;
-
 /**
- * Verifica localmente los tokens firmados emitidos por auth-service con HMAC-SHA256.
- *
- * Formato compacto esperado: base64url(subject|role|expiresAt) + "." + base64url(firma)
+ * Verifica localmente los tokens emitidos por el servicio de Usuarios, sin llamarlo en cada petición.
+ * Formato: base64url("login|ROL|vence") + "." + base64url(HMAC-SHA256). Requiere el mismo secreto
+ * con el que firma el servicio de Usuarios.
  */
 public class TokenVerifier {
 
     private static final String ALGORITHM = "HmacSHA256";
-    private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
+    private static final Base64.Decoder DECODER = Base64.getUrlDecoder();
 
     private final byte[] secret;
     private final Clock clock;
-
-    public TokenVerifier(String secret) {
-        this(secret, Clock.systemDefaultZone());
-    }
 
     public TokenVerifier(String secret, Clock clock) {
         if (secret == null || secret.length() < 16) {
@@ -39,49 +32,28 @@ public class TokenVerifier {
         this.clock = clock;
     }
 
-    /**
-     * Verifica la autenticidad y vigencia de una cadena de token Bearer.
-     *
-     * @param compactToken token en formato "payload.firma"
-     * @return AuthToken si es valido, o Optional.empty() si es invalido o expiro.
-     */
-    public Optional<AuthToken> verify(String compactToken) {
-        if (compactToken == null || compactToken.isBlank()) {
-            return Optional.empty();
-        }
-
-        // Si viene con el prefijo "Bearer ", se extrae el token
-        String tokenStr = compactToken.startsWith("Bearer ") ? compactToken.substring(7).trim() : compactToken.trim();
-
+    /** @return el usuario si la firma es correcta y el token no ha vencido. */
+    public Optional<AuthenticatedUser> verify(String compact) {
         try {
-            String[] parts = tokenStr.split("\\.");
+            String[] parts = compact.split("\\.");
             if (parts.length != 2) {
                 return Optional.empty();
             }
-
             String payload = new String(DECODER.decode(parts[0]), StandardCharsets.UTF_8);
+            // MessageDigest.isEqual compara en tiempo constante (evita ataques de temporización)
             boolean validSignature = MessageDigest.isEqual(
                     sign(payload).getBytes(StandardCharsets.UTF_8),
                     parts[1].getBytes(StandardCharsets.UTF_8));
-
             if (!validSignature) {
                 return Optional.empty();
             }
-
             String[] fields = payload.split("\\|");
-            if (fields.length != 3) {
+            if (!LocalDateTime.parse(fields[2]).isAfter(LocalDateTime.now(clock))) {
                 return Optional.empty();
             }
-
-            AuthToken token = new AuthToken(
-                    fields[0],
-                    Role.valueOf(fields[1]),
-                    LocalDateTime.parse(fields[2]),
-                    parts[1]);
-
-            return token.isExpired(LocalDateTime.now(clock)) ? Optional.empty() : Optional.of(token);
+            return Optional.of(new AuthenticatedUser(fields[0], fields[1], compact));
         } catch (RuntimeException e) {
-            return Optional.empty(); // Malformado, expirado o rol desconocido
+            return Optional.empty(); // token mal formado
         }
     }
 
@@ -91,7 +63,7 @@ public class TokenVerifier {
             mac.init(new SecretKeySpec(secret, ALGORITHM));
             return ENCODER.encodeToString(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
-            throw new IllegalStateException("Error al verificar la firma del token", e);
+            throw new IllegalStateException("No fue posible verificar el token", e);
         }
     }
 }

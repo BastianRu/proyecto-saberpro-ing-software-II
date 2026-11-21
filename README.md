@@ -146,3 +146,25 @@ interacciones, `ArgumentCaptor` de la auditoría y transición inválida) y en
 `QuestionControllerMockitoTest` (`IQuestionService`: delegación de listar, buscar,
 crear, modificar, consultar, cambiar estado, historial y estadísticas).
 
+
+
+## Iteración 2: microservicios
+
+El dominio se reparte en cuatro servicios Spring Boot (base de datos SQLite propia cada uno) que se comunican por REST
+y por eventos en RabbitMQ:
+
+| Servicio | Puerto | Responsabilidad |
+|---|---|---|
+| `auth-service` | 8081 | Usuarios, login y token firmado |
+| `banco-service` | 8082 | Preguntas, validación estructural embebida, ciclo de vida (patrón State), roles |
+| `revision-service` | 8083 | Revisión por pares; ejecuta aprobar/rechazar en el Banco |
+| `auditoria-service` | 8084 | Historial de preguntas a partir de los eventos del Banco |
+
+```bash
+docker compose up -d                        # RabbitMQ
+cd auth-service && mvn spring-boot:run      # y lo mismo en banco-, revision- y auditoria-service
+mvn javafx:run                              # cliente de escritorio (login contra auth-service)
+```
+
+Cada servicio tiene su `README.md`. La colección `postman/saberpro-microservicios.postman_collection.json` recorre el flujo completo.
+El detalle del diseño está en `CONTEXTO_PROYECTO.md`; las decisiones, contratos y limitaciones, en `docs/decisiones-iteracion-2.md`.

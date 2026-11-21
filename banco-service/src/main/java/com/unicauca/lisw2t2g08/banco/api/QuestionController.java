@@ -1,6 +1,7 @@
 package com.unicauca.lisw2t2g08.banco.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,146 +9,123 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.unicauca.lisw2t2g08.banco.domain.AuthToken;
 import com.unicauca.lisw2t2g08.banco.domain.DifficultyLevel;
 import com.unicauca.lisw2t2g08.banco.domain.Question;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionCriteria;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionDraft;
 import com.unicauca.lisw2t2g08.banco.domain.QuestionState;
-import com.unicauca.lisw2t2g08.banco.domain.Role;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStates;
+import com.unicauca.lisw2t2g08.banco.domain.QuestionStatistics;
+import com.unicauca.lisw2t2g08.banco.security.AuthenticatedUser;
+import com.unicauca.lisw2t2g08.banco.security.BearerAuthFilter;
 import com.unicauca.lisw2t2g08.banco.security.ForbiddenException;
-import com.unicauca.lisw2t2g08.banco.security.TokenVerifier;
-import com.unicauca.lisw2t2g08.banco.security.UnauthorizedException;
 import com.unicauca.lisw2t2g08.banco.service.IQuestionService;
 
 /**
- * Controlador REST para el banco de preguntas.
+ * Punto de entrada REST del Banco. Traduce HTTP <-> IQuestionService y aplica la matriz de roles (RF-03):
+ * crear y editar, ADMINISTRADOR y AUTOR_PREGUNTAS; cambiar estado, ADMINISTRADOR, AUTOR_PREGUNTAS y REVISOR
+ * (los revisores lo hacen a través de revision-service); consultar, cualquier usuario autenticado.
  */
 @RestController
 @RequestMapping("/preguntas")
 public class QuestionController {
 
-    private final IQuestionService questionService;
-    private final TokenVerifier tokenVerifier;
+    public record StateChangeRequest(String state) { }
 
-    public QuestionController(IQuestionService questionService, TokenVerifier tokenVerifier) {
-        this.questionService = questionService;
-        this.tokenVerifier = tokenVerifier;
-    }
-
-    @GetMapping
-    public List<QuestionResponse> list(
-            @RequestParam(required = false) QuestionState state,
-            @RequestParam(required = false) DifficultyLevel difficulty,
-            @RequestParam(required = false) String competence,
-            @RequestParam(required = false) String topic,
-            @RequestParam(required = false) String subtopic,
-            @RequestParam(required = false) String text) {
-
-        boolean hasFilters = (state != null || difficulty != null || competence != null
-                || topic != null || subtopic != null || text != null);
-
-        if (!hasFilters) {
-            return questionService.listQuestions().stream().map(QuestionResponse::of).toList();
+    public record QuestionResponse(String id, String name, String context, String directQuestion,
+                                   List<String> options, int correctIndex, String justification,
+                                   String bibliography, String competence, String topic,
+                                   String subtopic, DifficultyLevel difficulty, String state,
+                                   String stateLabel, List<String> allowedTransitions) {
+        static QuestionResponse of(Question q) {
+            QuestionState state = q.getState();
+            return new QuestionResponse(q.getId(), q.getName(), q.getContext(), q.getStatement(),
+                    q.getDistractors().getOptions(), q.getDistractors().getCorrectIndex(),
+                    q.getJustification(), q.getBibliography(), q.getCompetence(), q.getTopic(),
+                    q.getSubtopic(), q.getDifficulty(), state.getCode(), state.getLabel(),
+                    state.allowedTransitions().stream().map(QuestionState::getCode).toList());
         }
-
-        QuestionCriteria criteria = new QuestionCriteria()
-                .withState(state)
-                .withDifficulty(difficulty)
-                .withCompetence(competence)
-                .withTopic(topic)
-                .withSubtopic(subtopic)
-                .withText(text);
-
-        return questionService.searchQuestions(criteria).stream().map(QuestionResponse::of).toList();
     }
 
-    @GetMapping("/{id}")
-    public QuestionResponse findById(@PathVariable String id) {
-        return questionService.findById(id)
-                .map(QuestionResponse::of)
-                .orElseThrow(() -> new ResourceNotFoundException("Pregunta no encontrada: " + id));
+    public record StatisticsResponse(int total, Map<String, StateCount> byState) {
+        public record StateCount(int count, double percentage) { }
+    }
+
+    private static final String[] AUTHORS = {"ADMINISTRADOR", "AUTOR_PREGUNTAS"};
+    private static final String[] STATE_CHANGERS = {"ADMINISTRADOR", "AUTOR_PREGUNTAS", "REVISOR"};
+
+    private final IQuestionService service;
+
+    public QuestionController(IQuestionService service) {
+        this.service = service;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public QuestionResponse create(
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody QuestionRequest request) {
-
-        AuthToken token = requireUser(authHeader, Role.ADMINISTRADOR, Role.AUTOR_PREGUNTAS);
-        Question question = questionService.createQuestion(request.toDraft(), token.getSubject());
-        return QuestionResponse.of(question);
+    public QuestionResponse create(@RequestBody QuestionDraft draft,
+                                   @RequestAttribute(BearerAuthFilter.USER_ATTRIBUTE) AuthenticatedUser user) {
+        requireRole(user, AUTHORS);
+        return QuestionResponse.of(service.createQuestion(draft, user.login()));
     }
 
-    @PutMapping("/{id}")
-    public QuestionResponse update(
-            @PathVariable String id,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody QuestionRequest request) {
-
-        AuthToken token = requireUser(authHeader, Role.ADMINISTRADOR, Role.AUTOR_PREGUNTAS);
-        Question question = questionService.updateQuestion(id, request.toDraft(), token.getSubject());
-        return QuestionResponse.of(question);
-    }
-
-    @PatchMapping("/{id}/estado")
-    public QuestionResponse changeState(
-            @PathVariable String id,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestBody ChangeStateRequest request) {
-
-        if (request == null || request.state() == null) {
-            throw new IllegalArgumentException("El estado destino es obligatorio");
+    @GetMapping
+    public List<QuestionResponse> search(@RequestParam(required = false) String text,
+                                         @RequestParam(required = false) String state,
+                                         @RequestParam(required = false) String difficulty,
+                                         @RequestParam(required = false) String competence,
+                                         @RequestParam(required = false) String topic,
+                                         @RequestParam(required = false) String subtopic) {
+        QuestionCriteria criteria = new QuestionCriteria().withText(text).withCompetence(competence)
+                .withTopic(topic).withSubtopic(subtopic);
+        if (state != null && !state.isBlank()) {
+            criteria.withState(QuestionStates.fromCode(state));
         }
-
-        AuthToken token = requireUser(authHeader, Role.ADMINISTRADOR, Role.AUTOR_PREGUNTAS, Role.REVISOR);
-        questionService.changeState(id, request.state(), token.getSubject());
-
-        return questionService.findById(id)
-                .map(QuestionResponse::of)
-                .orElseThrow(() -> new ResourceNotFoundException("Pregunta no encontrada tras cambio de estado: " + id));
-    }
-
-    @GetMapping("/{id}/historial")
-    public List<QuestionStateChangeResponse> stateHistory(@PathVariable String id) {
-        return questionService.stateHistory(id).stream()
-                .map(QuestionStateChangeResponse::of)
-                .toList();
+        if (difficulty != null && !difficulty.isBlank()) {
+            criteria.withDifficulty(DifficultyLevel.valueOf(difficulty.trim()));
+        }
+        return service.searchQuestions(criteria).stream().map(QuestionResponse::of).toList();
     }
 
     @GetMapping("/estadisticas")
-    public QuestionStatisticsResponse statistics() {
-        return QuestionStatisticsResponse.of(questionService.getStatistics());
+    public StatisticsResponse statistics() {
+        QuestionStatistics stats = service.getStatistics();
+        Map<String, StatisticsResponse.StateCount> byState = new java.util.LinkedHashMap<>();
+        for (QuestionState state : QuestionStates.all()) {
+            byState.put(state.getCode(),
+                    new StatisticsResponse.StateCount(stats.getCount(state), stats.getPercentage(state)));
+        }
+        return new StatisticsResponse(stats.getTotal(), byState);
     }
 
-    private AuthToken requireUser(String authHeader, Role... allowedRoles) {
-        if (authHeader == null || authHeader.isBlank()) {
-            throw new UnauthorizedException("Se requiere el encabezado Authorization con un token Bearer");
+    @GetMapping("/{id}")
+    public QuestionResponse get(@PathVariable String id) {
+        return QuestionResponse.of(service.getQuestion(id));
+    }
+
+    @PutMapping("/{id}")
+    public QuestionResponse update(@PathVariable String id, @RequestBody QuestionDraft draft,
+                                   @RequestAttribute(BearerAuthFilter.USER_ATTRIBUTE) AuthenticatedUser user) {
+        requireRole(user, AUTHORS);
+        return QuestionResponse.of(service.updateQuestion(id, draft));
+    }
+
+    @PatchMapping("/{id}/estado")
+    public QuestionResponse changeState(@PathVariable String id, @RequestBody StateChangeRequest request,
+                                        @RequestAttribute(BearerAuthFilter.USER_ATTRIBUTE) AuthenticatedUser user) {
+        requireRole(user, STATE_CHANGERS);
+        return QuestionResponse.of(service.changeState(id, request.state(), user.login()));
+    }
+
+    private static void requireRole(AuthenticatedUser user, String... allowed) {
+        if (!java.util.Arrays.asList(allowed).contains(user.role())) {
+            throw new ForbiddenException("El rol " + user.role() + " no tiene permisos para esta operación");
         }
-
-        AuthToken token = tokenVerifier.verify(authHeader)
-                .orElseThrow(() -> new UnauthorizedException("Token de autorizacion invalido o expirado"));
-
-        if (allowedRoles.length > 0) {
-            boolean authorized = false;
-            for (Role role : allowedRoles) {
-                if (token.getRole() == role) {
-                    authorized = true;
-                    break;
-                }
-            }
-            if (!authorized) {
-                throw new ForbiddenException("El rol " + token.getRole() + " no tiene permisos para esta operacion");
-            }
-        }
-
-        return token;
     }
 }

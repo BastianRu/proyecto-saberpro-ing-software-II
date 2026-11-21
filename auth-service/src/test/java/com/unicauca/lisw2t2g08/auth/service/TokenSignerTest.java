@@ -21,9 +21,9 @@ class TokenSignerTest {
 
     private static final Instant NOW = Instant.parse("2026-10-31T10:00:00Z");
 
-    // Vector de contrato compartido con banco-service (TokenVerifierTest).
-    // Cualquier cambio en el formato del payload o en el algoritmo de firma
-    // debe romper esta prueba y la del otro servicio.
+    // Vector de contrato compartido con los verificadores de banco, revisión y
+    // auditoría. Cualquier cambio en el formato del payload o en el algoritmo de
+    // firma debe romper esta prueba y la de los consumidores.
     private static final String FIXED_SECRET = "0123456789abcdef0123456789abcdef";
     private static final String FIXED_TOKEN =
             "YW5hfEFETUlOSVNUUkFET1J8MjAyNi0xMS0wNFQxMzowMA"

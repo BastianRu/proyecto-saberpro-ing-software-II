@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -14,10 +14,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.unicauca.lisw2t2g08.banco.domain.AuthToken;
-import com.unicauca.lisw2t2g08.banco.domain.Role;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TokenVerifierTest {
 
@@ -37,57 +35,41 @@ class TokenVerifierTest {
 
     @BeforeEach
     void setUp() {
-        fixedClock = Clock.fixed(Instant.parse("2026-11-04T12:00:00Z"), ZoneId.of("UTC"));
+        fixedClock = Clock.fixed(Instant.parse("2026-11-04T12:00:00Z"), ZoneOffset.UTC);
         verifier = new TokenVerifier(SECRET, fixedClock);
     }
 
     @Test
-    void verify_validToken_returnsAuthToken() {
+    void tokenValidoDevuelveElUsuarioYElRol() {
         LocalDateTime future = LocalDateTime.now(fixedClock).plusMinutes(30);
-        String token = createToken("docente1", Role.AUTOR_PREGUNTAS, future, SECRET);
+        String token = createToken("docente1", "AUTOR_PREGUNTAS", future, SECRET);
 
-        Optional<AuthToken> result = verifier.verify(token);
+        Optional<AuthenticatedUser> result = verifier.verify(token);
 
         assertTrue(result.isPresent());
-        assertEquals("docente1", result.get().getSubject());
-        assertEquals(Role.AUTOR_PREGUNTAS, result.get().getRole());
-        assertEquals(future, result.get().getExpiresAt());
+        assertEquals("docente1", result.get().login());
+        assertEquals("AUTOR_PREGUNTAS", result.get().role());
+        assertEquals(token, result.get().token());
     }
 
     @Test
-    void verify_bearerPrefix_returnsAuthToken() {
-        LocalDateTime future = LocalDateTime.now(fixedClock).plusMinutes(30);
-        String token = "Bearer " + createToken("admin1", Role.ADMINISTRADOR, future, SECRET);
-
-        Optional<AuthToken> result = verifier.verify(token);
-
-        assertTrue(result.isPresent());
-        assertEquals("admin1", result.get().getSubject());
-        assertEquals(Role.ADMINISTRADOR, result.get().getRole());
-    }
-
-    @Test
-    void verify_expiredToken_returnsEmpty() {
+    void tokenVencidoNoSeAcepta() {
         LocalDateTime past = LocalDateTime.now(fixedClock).minusMinutes(5);
-        String token = createToken("docente1", Role.DOCENTE, past, SECRET);
+        String token = createToken("docente1", "DOCENTE", past, SECRET);
 
-        Optional<AuthToken> result = verifier.verify(token);
-
-        assertTrue(result.isEmpty());
+        assertTrue(verifier.verify(token).isEmpty());
     }
 
     @Test
-    void verify_tamperedSignature_returnsEmpty() {
+    void firmaAlteradaNoSeAcepta() {
         LocalDateTime future = LocalDateTime.now(fixedClock).plusMinutes(30);
-        String token = createToken("docente1", Role.DOCENTE, future, "otro-secreto-diferente-123456");
+        String token = createToken("docente1", "DOCENTE", future, "otro-secreto-diferente-123456");
 
-        Optional<AuthToken> result = verifier.verify(token);
-
-        assertTrue(result.isEmpty());
+        assertTrue(verifier.verify(token).isEmpty());
     }
 
     @Test
-    void verify_malformedToken_returnsEmpty() {
+    void tokenMalFormadoNoSeAceptaNiLanzaExcepcion() {
         assertTrue(verifier.verify(null).isEmpty());
         assertTrue(verifier.verify("").isEmpty());
         assertTrue(verifier.verify("sin_punto").isEmpty());
@@ -95,19 +77,21 @@ class TokenVerifierTest {
     }
 
     @Test
-    void verify_tokenDelVectorDeContratoCompartido_returnsAuthToken() {
-        Clock clock = Clock.fixed(Instant.parse("2026-11-04T12:00:00Z"), ZoneId.of("UTC"));
-        TokenVerifier contractVerifier = new TokenVerifier(SECRET, clock);
+    void tokenDelVectorDeContratoCompartidoSeAcepta() {
+        AuthenticatedUser user = verifier.verify(FIXED_TOKEN).orElseThrow();
 
-        AuthToken token = contractVerifier.verify(FIXED_TOKEN).orElseThrow();
-
-        assertEquals("ana", token.getSubject());
-        assertEquals(Role.ADMINISTRADOR, token.getRole());
-        assertEquals(LocalDateTime.parse("2026-11-04T13:00"), token.getExpiresAt());
+        assertEquals("ana", user.login());
+        assertEquals("ADMINISTRADOR", user.role());
     }
 
-    private String createToken(String subject, Role role, LocalDateTime expiresAt, String secretKey) {
-        String payload = subject + "|" + role.name() + "|" + expiresAt;
+    @Test
+    void secretoCortoSeRechaza() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new TokenVerifier("corto", fixedClock));
+    }
+
+    private String createToken(String subject, String role, LocalDateTime expiresAt, String secretKey) {
+        String payload = subject + "|" + role + "|" + expiresAt;
         String encodedPayload = ENCODER.encodeToString(payload.getBytes(StandardCharsets.UTF_8));
         try {
             Mac mac = Mac.getInstance("HmacSHA256");

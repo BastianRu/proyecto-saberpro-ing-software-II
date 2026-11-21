@@ -3,7 +3,7 @@ package com.unicauca.lisw2t2g08.banco;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-// Microservicio de Banco de Preguntas (puerto 8082)
+// Microservicio del Banco de Preguntas con validación estructural embebida (puerto 8082)
 
 @SpringBootApplication
 public class BancoServiceApplication {

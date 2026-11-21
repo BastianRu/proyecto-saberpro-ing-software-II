@@ -1,7 +1,8 @@
 package com.unicauca.lisw2t2g08.ui;
  
 import com.unicauca.lisw2t2g08.domain.Role;
-import com.unicauca.lisw2t2g08.service.IUserService;
+import com.unicauca.lisw2t2g08.service.AuthServiceUnavailableException;
+import com.unicauca.lisw2t2g08.service.IAuthClient;
 import com.unicauca.lisw2t2g08.service.InvalidPasswordException;
 import com.unicauca.lisw2t2g08.service.UserAlreadyExistsException;
 
@@ -24,15 +25,15 @@ public class RegisterView {
   
 
   private final Stage stage;
-  private final IUserService userService;
+  private final IAuthClient authClient;
   private final QuestionBankWindows questionBank;
   private final Scene scene;
 
 
 
-  public RegisterView(Stage stage, IUserService userService, QuestionBankWindows questionBank){
+  public RegisterView(Stage stage, IAuthClient authClient, QuestionBankWindows questionBank){
     this.stage = stage;
-    this.userService = userService;
+    this.authClient = authClient;
     this.questionBank = questionBank;
     this.scene = buildScene();
   }
@@ -70,7 +71,7 @@ public class RegisterView {
  
         Button backButton = new Button("Volver a inicio de sesión");
         backButton.setOnAction(e -> {
-            LoginView loginView = new LoginView(stage, userService, questionBank);
+            LoginView loginView = new LoginView(stage, authClient, questionBank);
             stage.setScene(loginView.getScene());
         });
  
@@ -93,13 +94,15 @@ public class RegisterView {
       }
 
      try {
-            userService.register(loginField.getText(), fullNameField.getText(),
+            authClient.register(loginField.getText(), fullNameField.getText(),
                     selectedRole, passwordField.getText());
             showSuccess(messageLabel, "Usuario registrado con éxito. Ya puedes iniciar sesión.");
         } catch (UserAlreadyExistsException ex) {
             showError(messageLabel, ex.getMessage());
         } catch (InvalidPasswordException ex) {
             showError(messageLabel, String.join("\n", ex.getErrors()));
+        } catch (AuthServiceUnavailableException ex) {
+            showError(messageLabel, ex.getMessage());
         } catch (IllegalArgumentException ex) {
             // Capturamos los invariantes de la entidad User (login/nombre vacíos, etc.)
             showError(messageLabel, ex.getMessage());

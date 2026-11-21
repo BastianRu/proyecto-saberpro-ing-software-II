@@ -3,7 +3,11 @@ package com.unicauca.lisw2t2g08.banco.domain;
 import java.util.Locale;
 
 /**
- * Criterios opcionales para consultar preguntas.
+ * Capa de dominio.
+ *
+ * Criterios opcionales para consultar preguntas (RF-07). Un criterio nulo o
+ * vacio no restringe la busqueda; los textos se comparan sin distinguir
+ * mayusculas y el texto libre se busca en el nombre, contexto y pregunta.
  */
 public class QuestionCriteria {
 
@@ -68,6 +72,10 @@ public class QuestionCriteria {
         return this;
     }
 
+    /**
+     * @param question pregunta a evaluar.
+     * @return true si cumple todos los criterios informados.
+     */
     public boolean matches(Question question) {
         if (state != null && question.getState() != state) {
             return false;
