@@ -1,18 +1,15 @@
 # Proyecto Banco de Preguntas Pruebas Saber Pro
 
-> **Aviso de vigencia:** la carpeta `src/` contiene la **primera iteración**
-> (monolito de escritorio JavaFX + SQLite) y se conserva como legado histórico.
-> La arquitectura vigente de la **segunda iteración** son los microservicios
-> `auth-service` (8081), `banco-service` (8082) y `validacion-service` (8083),
-> cada uno con su propio `pom.xml`. Para levantarlos, ver
-> [`docs/EJECUCION.md`](docs/EJECUCION.md). Los servicios no dependen del código
-> de `src/`.
+> **Aviso de vigencia:** `src/` conserva la **primera iteración** (monolito JavaFX + SQLite).
+> La segunda iteración, ya integrada en esta rama, se compone de `auth-service` (8081),
+> `banco-service` (8082), `revision-service` (8083) y `auditoria-service` (8084).
+> La validación estructural se ejecuta como pipeline embebido en `banco-service`; ya
+> no existe `validacion-service`. Cada servicio tiene su propio `pom.xml` y base SQLite.
+> Para iniciar el broker y los servicios, consulta sus README y `docker-compose.yml`.
 >
-> Documentación de la iteración 2: [`RULES.md`](RULES.md),
-> [`docs/ESTADO_ACTUAL.md`](docs/ESTADO_ACTUAL.md),
-> [`docs/EJECUCION.md`](docs/EJECUCION.md),
-> [`docs/REDUNDANCIAS.md`](docs/REDUNDANCIAS.md) y
-> [`docs/PENDIENTES.md`](docs/PENDIENTES.md).
+> Documentación de integración y comparación: [`docs/COMPARACION_INTEGRACION.md`](docs/COMPARACION_INTEGRACION.md).
+> Decisiones y limitaciones: [`docs/decisiones-iteracion-2.md`](docs/decisiones-iteracion-2.md).
+> Documento de arquitectura con plantilla: [`docs_2/SAD.docx`](docs_2/SAD.docx) y [`docs_2/SAD.pdf`](docs_2/SAD.pdf).
 
 La primera iteración es una aplicación de escritorio en Java (JavaFX + SQLite)
 construida siguiendo los principios SOLID, con Inversión de Dependencias como
