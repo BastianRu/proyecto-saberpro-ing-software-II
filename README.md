@@ -1,15 +1,16 @@
 # Proyecto Banco de Preguntas Pruebas Saber Pro
 
 > **Aviso de vigencia:** `src/` conserva la **primera iteración** (monolito JavaFX + SQLite).
-> La segunda iteración, ya integrada en esta rama, se compone de `auth-service` (8081),
+> La implementación de la segunda iteración se compone de `auth-service` (8081),
 > `banco-service` (8082), `revision-service` (8083) y `auditoria-service` (8084).
 > La validación estructural se ejecuta como pipeline embebido en `banco-service`; ya
 > no existe `validacion-service`. Cada servicio tiene su propio `pom.xml` y base SQLite.
 > Para iniciar el broker y los servicios, consulta sus README y `docker-compose.yml`.
 >
-> Documentación de integración y comparación: [`docs/COMPARACION_INTEGRACION.md`](docs/COMPARACION_INTEGRACION.md).
-> Decisiones y limitaciones: [`docs/decisiones-iteracion-2.md`](docs/decisiones-iteracion-2.md).
-> Documento de arquitectura con plantilla: [`docs_2/SAD.docx`](docs_2/SAD.docx) y [`docs_2/SAD.pdf`](docs_2/SAD.pdf).
+> Documentación e índice de archivos: [`docs/README.md`](docs/README.md).
+> Comparación histórica: [`docs/COMPARACION_INTEGRACION.md`](docs/COMPARACION_INTEGRACION.md).
+> Decisiones vigentes: [`docs/decisiones-iteracion-2.md`](docs/decisiones-iteracion-2.md).
+> **SAD de entrega del Sprint 2:** [`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`](entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf).
 
 La primera iteración es una aplicación de escritorio en Java (JavaFX + SQLite)
 construida siguiendo los principios SOLID, con Inversión de Dependencias como

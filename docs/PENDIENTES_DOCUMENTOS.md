@@ -23,6 +23,7 @@
 - Product Backlog, Sprint Backlog, Task Board y Burndown Chart como evidencia del Sprint.
 - Evidencia de aceptación del Product Owner y PR revisado.
 
-## Restricción de compilación
+## Nota sobre borradores
 
-- Los PDFs LaTeX se generaron con Tectonic por estar ausente `pdflatex`/TeX Live y no existir permisos `sudo` para instalarlo. **[POR COMPLETAR: ejecutar dos compilaciones con `pdflatex` en un entorno con TeX Live y confirmar cero errores.]** Responsable: equipo.
+- Los documentos LaTeX son material de apoyo y no son el SAD designado para entrega. El SAD oficial está señalado en `entregables/sprint-2/README.md`.
+- Para la entrega solicitada (PDF SAD, acceso al gestor y al repositorio), la compilación con `pdflatex` de los borradores no es requisito de publicación.
