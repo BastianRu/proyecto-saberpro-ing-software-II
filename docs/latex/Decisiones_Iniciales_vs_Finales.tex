@@ -1,0 +1,93 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\setlength{\headheight}{15pt}
+\usepackage{pdflscape}
+\graphicspath{{../diagramas/}}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black}
+\makeatletter\g@addto@macro\UrlBreaks{\do\-}\makeatother
+\setstretch{1.1}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\newcommand{\pendiente}[1]{\textcolor{red}{\textbf{[POR COMPLETAR: #1]}}}
+\pagestyle{fancy}\fancyhf{}
+\lhead{Banco de Preguntas Saber}
+\rhead{Decisiones iniciales y finales}
+\cfoot{\thepage}
+\begin{document}
+\begin{titlepage}
+\centering
+{\Large Universidad del Cauca\\Facultad de Ingeniería Electrónica y Telecomunicaciones\\Programa de Ingeniería de Sistemas\par}
+\vspace{2cm}
+{\huge\bfseries Banco de Preguntas Saber\par}
+\vspace{0.5cm}
+{\Large Decisiones Iniciales frente a Decisiones Finales\par}
+\vspace{1cm}
+{Equipo ``Sin Nombre''\par}
+\vspace{0.4cm}
+Juan Manuel Meneses Daza\\Juan Sebastian Muñoz Ruiz\\Juan Sebastian Molano Bolaños\\Santiago Rodríguez Bolaños
+\vfill
+Ingeniería de Software II -- 2026.2\\Popayán, noviembre de 2026
+\end{titlepage}
+\tableofcontents\newpage
+
+\section{Propósito y fuentes}
+Este documento compara las decisiones del primer corte con la arquitectura final implementada. La fuente inicial es el PDF de decisiones técnicas del primer corte; las finales se contrastan con los archivos de decisiones de iteración 2 y SAD y el código. La decisión inicial no se interpreta como implementación vigente.
+
+\section{Decisiones iniciales frente a finales}
+\begin{landscape}
+\small
+\renewcommand{\arraystretch}{0.88}
+\begin{tabularx}{\linewidth}{p{3.0cm}p{4.4cm}p{5.0cm}X}
+\toprule Aspecto & Decisión inicial & Decisión final verificada & Qué cambió y por qué \\
+\midrule
+Estilo arquitectónico & Monolito en capas con presentación JavaFX, servicios, acceso y dominio. & Cuatro servicios independientes y broker; se conserva \texttt{src/} como cliente/monolito. & El backend se separó para distribuir responsabilidades; cliente no migrado por completo. \\
+Plataforma & Java SE y JavaFX con SQLite. & Servicios Spring Boot con SQLite por servicio; JavaFX persiste localmente para preguntas. & Cambia plataforma del backend, preservando legado. \\
+Validación & Pipeline de filtros para requisitos estructurales. & Pipeline de siete filtros embebido en Banco. & Se mantiene patrón; se retira servicio independiente para evitar llamada remota en regla local. \\
+Mensajería & Observer local para notificar vistas; no microservicios. & RabbitMQ topic \texttt{saberpro.events}; consumidores Revisión y Auditoría. & Observer sigue limitado a GUI; eventos realizan integración distribuida. \\
+Ciclo de vida & State modelado por enum en primera versión. & State mediante jerarquía de clases, doble despacho y estados compartidos. & Se localiza comportamiento por estado para representar transiciones permitidas. \\
+Cuarto servicio & El diseño intermedio consideraba el servicio de validación independiente. & \texttt{revision-service} (8083) ocupa su lugar; la validación se embebe. & El cambio aplica la sugerencia del profesor del servicio REVISOR a cambio de otro; el motivo exacto se resume en decisiones y código. \\
+Auditoría & Historial local en Banco. & \texttt{auditoria-service} proyecta eventos y deduplica por \texttt{eventId}. & Historial separado; consistencia eventual y riesgo de pérdida sin Outbox. \\
+Token & Autenticación del monolito. & Token HMAC-SHA256 firmado por Auth, validado localmente con secreto compartido. & Evita consulta de autenticación en cada servicio; exige coordinación de secreto/contrato. \\
+Datos & SQLite única para el monolito. & SQLite separada: \texttt{auth.db}, \texttt{banco.db}, \texttt{revision.db}, \texttt{auditoria.db}. & Aísla propiedad de datos, pero limita la demostración de múltiples instancias. \\
+Cliente & Aplicación local de escritorio. & Login contra Auth; gestión de preguntas continúa local. & Integración parcial; migración de cliente queda pendiente. \\
+\bottomrule
+\end{tabularx}
+\end{landscape}
+\clearpage
+
+\section{Qué se mantuvo}
+\begin{itemize}[leftmargin=*]
+\item Pipeline como patrón de validación estructural, ahora dentro del Banco.
+\item JavaFX como interfaz conservada para la entrega previa; la autenticación cambia a Auth remoto.
+\item SQLite se mantiene como tecnología, aunque se separan los archivos por servicio.
+\item Principios de dependencias por interfaces en los módulos de dominio y acceso.
+\end{itemize}
+
+\section{Decisiones abiertas}
+\begin{itemize}[leftmargin=*]
+\item Validar con el profesor la aceptación de SQLite respecto al requisito de escalabilidad.
+\item Acordar Outbox, recuperación de mensajes y cola de fallidos.
+\item Acordar migración de las operaciones del cliente JavaFX al Banco y Revisión remotos.
+\item Validar lista de patrones que el curso considera «vistos».
+\item Confirmar alcance pendiente de HU05 (asignación y formato de evaluación).
+\item Definir gestión del secreto para un entorno no local.
+\item \pendiente{El equipo debe aportar evidencias de Jira y aprobación del Product Owner.}
+\end{itemize}
+
+\end{document}

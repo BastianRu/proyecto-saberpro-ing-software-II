@@ -1,0 +1,24 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Resumen}{2}{section.1}%
+\contentsline {section}{\numberline {2}Requisitos funcionales}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Épica: administrar usuarios (HU01)}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Épica: gestionar preguntas (HU02)}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Épica: asegurar calidad de preguntas (HU03)}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Épica: administrar el ciclo de vida (HU04)}{2}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}HU05 implementada parcialmente: revisión por pares}{3}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Roles y permisos observados}{3}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Prototipos y usabilidad}{3}{section.3}%
+\contentsline {section}{\numberline {4}Escenarios de calidad}{3}{section.4}%
+\contentsline {section}{\numberline {5}Modelo de datos}{4}{section.5}%
+\contentsline {section}{\numberline {6}Arquitectura}{5}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Vista de contexto}{5}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Vista de contenedores}{5}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Vista de componentes}{8}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Vistas 4+1}{10}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Comunicación y eventos}{10}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Información repetida entre servicios}{10}{section.7}%
+\contentsline {section}{\numberline {8}Decisiones finales y patrones aplicados}{10}{section.8}%
+\contentsline {section}{\numberline {9}Cumplimiento del Sprint 2}{10}{section.9}%
+\contentsline {section}{\numberline {10}Pruebas}{12}{section.10}%
+\contentsline {section}{\numberline {11}Gestión del proyecto}{12}{section.11}%
+\contentsline {section}{\numberline {12}Sustentación y repositorio}{12}{section.12}%
