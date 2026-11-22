@@ -14,14 +14,14 @@
 2. **Entrega fiable de eventos:** el Banco puede guardar la pregunta y perder el evento si RabbitMQ falla; no existe Outbox. Evaluar Outbox y recuperación/reconciliación.
 3. **Mensajes fallidos:** Revisión y Auditoría reintentan hasta 3 veces y luego descartan sin DLQ (`revision-service/src/main/resources/application.properties`, `auditoria-service/src/main/resources/application.properties`). Definir retención, alerta y recuperación de eventos fallidos.
 4. **Persistencia del broker:** Compose no define volumen para datos de RabbitMQ; una cola durable por sí sola no demuestra retención ante reinicio/pérdida del contenedor. Definir persistencia de despliegue y verificarla.
-4. **Consistencia del flujo de revisión:** si Banco acepta el cambio y falla la persistencia posterior en `revision.db`, ambos servicios pueden quedar en estados distintos. Definir recuperación/reconciliación.
-5. **SQLite y escalabilidad:** las conexiones compartidas y métodos `synchronized` no acreditan despliegue de varias instancias. Definir persistencia operable bajo concurrencia o aceptar/documentar el límite académico.
-6. **Gestión del secreto:** los cuatro servicios comparten un secreto por defecto de desarrollo. Definir inyección segura, rotación y protección en cualquier demostración no local.
-7. **Alcance HU05:** quedan por definir o fuera de alcance asignación automática de revisores y rúbrica/formato completo; ver `docs/decisiones-iteracion-2.md`.
-8. **Esquema temporal del token:** el formato de vencimiento ISO-8601 compartido debe seguir siendo interoperable. Acordar el tratamiento de zonas horarias antes de distribuir servicios en entornos heterogéneos.
-9. **CI y cobertura:** no se encontró `.github/workflows/` ni configuración de cobertura JaCoCo. Definir automatización y umbral si el curso lo exige.
-10. **Script E2E:** `scripts/e2e.sh` llama al servicio eliminado y debe actualizarse antes de usarse. No se modifica aquí por ser script ejecutable.
-11. **Documentación de usuario y prototipos:** confirmar material de usuario y prototipos, que no pueden inferirse del código.
+5. **Consistencia del flujo de revisión:** si Banco acepta el cambio y falla la persistencia posterior en `revision.db`, ambos servicios pueden quedar en estados distintos. Definir recuperación/reconciliación.
+6. **SQLite y escalabilidad:** las conexiones compartidas y métodos `synchronized` no acreditan despliegue de varias instancias. Definir persistencia operable bajo concurrencia o aceptar/documentar el límite académico.
+7. **Gestión del secreto:** los cuatro servicios comparten un secreto por defecto de desarrollo. Definir inyección segura, rotación y protección en cualquier demostración no local.
+8. **Alcance HU05:** quedan por definir o fuera de alcance asignación automática de revisores y rúbrica/formato completo; ver `docs/decisiones-iteracion-2.md`.
+9. **Esquema temporal del token:** el formato de vencimiento ISO-8601 compartido debe seguir siendo interoperable. Acordar el tratamiento de zonas horarias antes de distribuir servicios en entornos heterogéneos.
+10. **CI y cobertura:** no se encontró `.github/workflows/` ni configuración de cobertura JaCoCo. Definir automatización y umbral si el curso lo exige.
+11. **Script E2E:** `scripts/e2e.sh` llama al servicio eliminado y debe actualizarse antes de usarse. No se modifica aquí por ser script ejecutable.
+12. **Documentación de usuario y prototipos:** confirmar material de usuario y prototipos, que no pueden inferirse del código.
 
 ## Pendientes del profesor
 

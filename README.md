@@ -8,9 +8,8 @@
 > Para iniciar el broker y los servicios, consulta sus README y `docker-compose.yml`.
 >
 > Documentación e índice de archivos: [`docs/README.md`](docs/README.md).
-> Comparación histórica: [`docs/COMPARACION_INTEGRACION.md`](docs/COMPARACION_INTEGRACION.md).
 > Decisiones vigentes: [`docs/decisiones-iteracion-2.md`](docs/decisiones-iteracion-2.md).
-> **SAD de entrega del Sprint 2:** [`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`](entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf).
+> **SAD de entrega del Sprint 2:** [`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`](entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf) (fuente editable en la misma carpeta).
 
 La primera iteración es una aplicación de escritorio en Java (JavaFX + SQLite)
 construida siguiendo los principios SOLID, con Inversión de Dependencias como

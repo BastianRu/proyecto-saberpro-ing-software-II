@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Cada servicio debe ser dueño de sus datos. El SAD registra D-008: SQLite y Database per Service para la fase académica, con limitación de escalado (`docs_2/SAD.pdf`, §8). `docs/decisiones-iteracion-2.md`, §6, documenta conexión compartida y métodos sincronizados.
+Cada servicio debe ser dueño de sus datos. El SAD registra D-008: SQLite y Database per Service para la fase académica, con limitación de escalado (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8). `docs/decisiones-iteracion-2.md`, §6, documenta conexión compartida y métodos sincronizados.
 
 ## Decisión
 

@@ -47,7 +47,7 @@ Ingeniería de Software II -- 2026.2\\Popayán, noviembre de 2026
 \tableofcontents\newpage
 
 \section{Resumen}
-Este documento describe lo verificado en el repositorio del Banco de Preguntas Saber Pro. La iteración separa autenticación, banco de preguntas, revisión por pares y auditoría en servicios independientes. La interfaz de escritorio conserva operaciones locales del primer corte; por ello la migración no es completa. La escalabilidad operativa no se ha medido ni demostrado. La base principal de esta descripción es el código de los cuatro servicios, \texttt{docs/decisiones-iteracion-2.md} y \texttt{docs\_2/SAD.pdf}.
+Este documento describe lo verificado en el repositorio del Banco de Preguntas Saber Pro. La iteración separa autenticación, banco de preguntas, revisión por pares y auditoría en servicios independientes. La interfaz de escritorio conserva operaciones locales del primer corte; por ello la migración no es completa. La escalabilidad operativa no se ha medido ni demostrado. La base principal de esta descripción es el código de los cuatro servicios, \texttt{docs/decisiones-iteracion-2.md} y \texttt{entregables/sprint-2/SAD\_Banco\_Preguntas\_Iteracion2.pdf}.
 
 \section{Requisitos funcionales}
 Las historias y criterios se expresan en lenguaje de negocio. El alcance de HU01--HU04 procede de \texttt{docs/decisiones-iteracion-2.md}; la parte de HU05 se limita a la revisión implementada.
@@ -183,7 +183,7 @@ Auth emite tokens; Banco, Revisión y Auditoría los verifican localmente. Banco
 \begin{figure}[p]\centering\includegraphics[width=0.78\textwidth]{09-estados.png}\caption{Estados de pregunta.}\end{figure}
 
 \section{Información repetida entre servicios}
-Se repiten roles, formato de token, códigos de estado y contratos de eventos. Se conservan copias locales para que los servicios no dependan de clases de otro módulo. Los cambios requieren compatibilidad y pruebas coordinadas; las referencias \texttt{question\_id} entre bases no son llaves foráneas. Ver \texttt{docs/REDUNDANCIAS.md}.
+Se repiten roles, formato de token, códigos de estado y contratos de eventos. Se conservan copias locales para que los servicios no dependan de clases de otro módulo. Los cambios requieren compatibilidad y pruebas coordinadas; las referencias \texttt{question\_id} entre bases no son llaves foráneas. Ver \texttt{docs/decisiones-iteracion-2.md}.
 
 \section{Decisiones finales y patrones aplicados}
 Decisiones finales: microservicios con eventos; una SQLite por servicio; token HMAC-SHA256 compartido; validación embebida; \texttt{revision-service} en lugar del servicio anterior de validación; jerarquía State; Pipeline de filtros; consumidores idempotentes por \texttt{eventId}. Los ADR individuales están en \texttt{docs/adr/}. Observer permanece en el cliente local de \texttt{src/}; no es el mecanismo de eventos entre servicios. La lista académica de patrones «vistos» requiere validación del profesor.

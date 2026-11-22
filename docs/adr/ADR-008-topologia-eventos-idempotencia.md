@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Banco publica creación y cambios de estado; Auditoría y Revisión requieren proyecciones diferentes. La topología se describe en `docs/decisiones-iteracion-2.md`, §4, y D-004/D-007 del SAD (`docs_2/SAD.pdf`, §8).
+Banco publica creación y cambios de estado; Auditoría y Revisión requieren proyecciones diferentes. La topología se describe en `docs/decisiones-iteracion-2.md`, §4, y D-004/D-007 del SAD (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8).
 
 ## Decisión
 

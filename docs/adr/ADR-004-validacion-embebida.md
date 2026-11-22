@@ -5,7 +5,7 @@
 
 ## Contexto
 
-El diseño inicial proponía validación estructural como servicio independiente. El SAD recoge la validación embebida en D-002 (`docs_2/SAD.pdf`, §8); `docs/decisiones-iteracion-2.md`, §§2–3 explica que el pipeline es una función sobre el borrador y la llamada de red agregaba dependencia y punto de fallo.
+El diseño inicial proponía validación estructural como servicio independiente. El SAD recoge la validación embebida en D-002 (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8); `docs/decisiones-iteracion-2.md`, §§2–3 explica que el pipeline es una función sobre el borrador y la llamada de red agregaba dependencia y punto de fallo.
 
 ## Decisión
 
@@ -17,4 +17,4 @@ Servicio independiente invocado por REST, documentado como diseño inicial (`doc
 
 ## Consecuencias
 
-Crear/editar preguntas evita una llamada de red al validador; las reglas y su operación quedan en Banco. Los filtros no pueden escalar o desplegarse por separado. Un directorio residual `validacion-service/target` no constituye un módulo activo.
+Crear/editar preguntas evita una llamada de red al validador; las reglas y su operación quedan en Banco. Los filtros no pueden escalar o desplegarse por separado. El antiguo directorio `validacion-service/` ya no forma parte del repositorio.

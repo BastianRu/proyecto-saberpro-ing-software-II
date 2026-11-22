@@ -1,15 +1,27 @@
 # Documentación del proyecto
 
-## Estructura
+## Entrega
 
-- `docs_2/SAD.docx` y `docs_2/SAD.pdf`: fuente editable y PDF del SAD oficial de la iteración 2.
-- `entregables/sprint-2/`: copia del PDF del SAD preparada para compartir como entrega.
-- `docs/borradores/latex-sad/`: documentos de apoyo generados en LaTeX; están marcados como borradores y no reemplazan el SAD oficial.
+- `entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`: SAD de la iteración 2 para entregar.
+- `entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.docx`: fuente editable del mismo SAD.
+- `docs/borradores/latex-sad/`: fuentes LaTeX y PDFs de apoyo. **No son el SAD de entrega.**
+
+## Documentación técnica
+
+- `docs/decisiones-iteracion-2.md`: alcance, contratos, decisiones y límites de la iteración 2.
 - `docs/adr/`: decisiones arquitectónicas individuales.
-- `docs/diagramas/`: diagramas fuente PlantUML y PNG.
-- `docs/decisiones-iteracion-2.md`: decisiones, contratos y limitaciones de la iteración 2.
-- `docs/MiniQAW_Banco_Preguntas_Saber_Pro.xlsx`: MiniQAW original (histórico); `..._v2.xlsx`: actualización para revisión, con propuestas por validar.
-- `docs/COMPARACION_INTEGRACION.md` y `docs/ESTADO_ACTUAL.md`: registros históricos, identificados en sus encabezados.
-- `docs/EJECUCION.md`: guía de ejecución vigente. Advierte que `scripts/e2e.sh` es histórico y debe actualizarse antes de usarse.
+- `docs/diagramas/`: diagramas C4, UML y de estados en PlantUML y PNG.
+- `docs/EJECUCION.md`: cómo iniciar el broker y los cuatro servicios.
+- `docs/ESTANDAR_CODIFICACION.md`: convenciones observadas en el código.
+- `docs/SPRINT2.md`: objetivo y Definition of Done del Sprint 2.
+- `docs/CUMPLIMIENTO_SPRINT2.md`: matriz de cumplimiento con evidencia en código.
+- `docs/PENDIENTES.md`: límites técnicos y tareas de arquitectura aún abiertas.
+- `docs/MiniQAW_Banco_Preguntas_Saber_Pro_v2.xlsx`: estimación de esfuerzo para revisión.
 
-El repositorio entrega la arquitectura en PDF y mantiene sus fuentes/antecedentes para trazabilidad. La carpeta de entrega no contiene enlaces privados, contraseñas ni tokens.
+## Documentos de la primera iteración
+
+- `docs/Documento_Arquitectura_Banco_Preguntas_Saber_Pro.pdf`
+- `docs/Decisiones_Tecnicas_Banco_Preguntas_Saber_Pro.pdf`
+- `docs/MiniQAW_Banco_Preguntas_Saber_Pro.xlsx`
+
+Se conservan como antecedente del monolito JavaFX en `src/`; no describen la arquitectura vigente.

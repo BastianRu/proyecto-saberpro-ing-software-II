@@ -5,7 +5,7 @@
 
 ## Contexto
 
-La primera versión del Banco describía `QuestionState` como enumeración. El código actual implementa el patrón State con clases concretas; el cambio se registra en `docs/decisiones-iteracion-2.md`, §2, y en D-005 del SAD (`docs_2/SAD.pdf`, §8).
+La primera versión del Banco describía `QuestionState` como enumeración. El código actual implementa el patrón State con clases concretas; el cambio se registra en `docs/decisiones-iteracion-2.md`, §2, y en D-005 del SAD (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8).
 
 ## Decisión
 

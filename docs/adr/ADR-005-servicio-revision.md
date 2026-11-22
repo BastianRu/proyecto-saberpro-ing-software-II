@@ -5,7 +5,7 @@
 
 ## Contexto
 
-El equipo aplicó la sugerencia del profesor de tener un servicio de REVISOR «a cambio de otro». En el diseño inicial, el cuarto módulo era validación; en la versión final validación se embebió y Revisión ocupa su lugar. Fuentes: `docs/decisiones-iteracion-2.md`, §§1–3; SAD D-006, `docs_2/SAD.pdf`, §8.
+El equipo aplicó la sugerencia del profesor de tener un servicio de REVISOR «a cambio de otro». En el diseño inicial, el cuarto módulo era validación; en la versión final validación se embebió y Revisión ocupa su lugar. Fuentes: `docs/decisiones-iteracion-2.md`, §§1–3; SAD D-006, `entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8.
 
 ## Decisión
 

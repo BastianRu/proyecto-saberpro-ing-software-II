@@ -5,7 +5,7 @@
 
 ## Contexto
 
-La iteración 2 separa autenticación, preguntas, revisión y auditoría en módulos independientes. El SAD recoge esta decisión en D-001 y D-004 (`docs_2/SAD.pdf`, §8); la descripción de los contratos está en `docs/decisiones-iteracion-2.md`, §§2 y 4.
+La iteración 2 separa autenticación, preguntas, revisión y auditoría en módulos independientes. El SAD recoge esta decisión en D-001 y D-004 (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8); la descripción de los contratos está en `docs/decisiones-iteracion-2.md`, §§2 y 4.
 
 ## Decisión
 

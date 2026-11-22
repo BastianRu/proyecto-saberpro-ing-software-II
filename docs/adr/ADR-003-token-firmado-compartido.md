@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Los servicios requieren identificar usuario y rol sin consultar a Auth en cada solicitud. El formato común y la decisión stateless constan en `docs/decisiones-iteracion-2.md`, §4, y D-003 del SAD (`docs_2/SAD.pdf`, §8). La propiedad utilizada es `auth.token.secret` en los cuatro servicios.
+Los servicios requieren identificar usuario y rol sin consultar a Auth en cada solicitud. El formato común y la decisión stateless constan en `docs/decisiones-iteracion-2.md`, §4, y D-003 del SAD (`entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8). La propiedad utilizada es `auth.token.secret` en los cuatro servicios.
 
 ## Decisión
 

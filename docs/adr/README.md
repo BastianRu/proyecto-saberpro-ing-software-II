@@ -14,4 +14,4 @@ Fechas derivadas del historial Git: cambios de implementación de la arquitectur
 | [ADR-008](ADR-008-topologia-eventos-idempotencia.md) | Topología topic e idempotencia | Aceptada | 2026-11-19 |
 | [ADR-009](ADR-009-cliente-escritorio-pendiente.md) | Cliente de escritorio aún local | Aceptada (limitación documentada) | 2026-11-18 |
 
-> El SAD `docs_2/SAD.pdf`, §8, agrupa D-001 a D-008, pero indica que no existían ADR individuales. Estos archivos formalizan las decisiones ya documentadas; no añaden alternativas nuevas. Ver también `docs/decisiones-iteracion-2.md`.
+> El SAD `entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`, §8, agrupa D-001 a D-008, pero indica que no existían ADR individuales. Estos archivos formalizan las decisiones ya documentadas; no añaden alternativas nuevas. Ver también `docs/decisiones-iteracion-2.md`.
