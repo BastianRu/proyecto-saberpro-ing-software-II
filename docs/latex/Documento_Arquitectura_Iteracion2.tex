@@ -53,19 +53,81 @@ Este documento describe lo verificado en el repositorio del Banco de Preguntas S
 Las historias y criterios se expresan en lenguaje de negocio. El alcance de HU01--HU04 procede de \texttt{docs/decisiones-iteracion-2.md}; la parte de HU05 se limita a la revisión implementada.
 
 \subsection{Épica: administrar usuarios (HU01)}
-Como persona usuaria, quiero registrarme e iniciar sesión para acceder a las funciones que corresponden a mi rol. El sistema debe evitar logins repetidos, proteger las contraseñas y no permitir el acceso con credenciales incorrectas o con una cuenta inactiva.
+\textbf{Historia.} Como persona usuaria, quiero registrarme e iniciar sesión para acceder a las funciones que corresponden a mi rol.
+
+\textbf{Criterios de aceptación observables}
+\begin{enumerate}[leftmargin=*]
+\item Al registrar un login nuevo con datos válidos, el sistema confirma el alta y la cuenta queda activa.
+\item Al intentar registrar un login ya existente, el sistema rechaza el alta sin crear una segunda cuenta.
+\item El registro rechaza una contraseña que no alcance seis caracteres o no incluya un dígito, una mayúscula y un carácter especial.
+\item La contraseña no aparece en la respuesta de alta ni en el listado de usuarios; se almacena protegida.
+\item Al iniciar sesión con credenciales válidas de una cuenta activa, el sistema devuelve una credencial temporal firmada con la que los servicios autorizados aceptan las operaciones permitidas.
+\item Una cuenta inactiva o credenciales incorrectas no permiten iniciar sesión y reciben una respuesta de acceso denegado.
+\end{enumerate}
 
 \subsection{Épica: gestionar preguntas (HU02)}
-Como autor, quiero crear, consultar, filtrar y corregir preguntas para construir un banco útil para la preparación Saber Pro. Solo se edita el contenido cuando está en borrador. Una pregunta contiene contexto, pregunta, opciones, respuesta correcta y datos académicos necesarios.
+\textbf{Historia.} Como autor, quiero crear, consultar, filtrar y corregir preguntas para construir un banco útil para la preparación Saber Pro.
+
+\textbf{Criterios de aceptación observables}
+\begin{enumerate}[leftmargin=*]
+\item Un autor o administrador puede registrar una pregunta con sus datos académicos, contexto, pregunta directa y opciones; si es válida, queda guardada en estado Borrador.
+\item Al consultar una pregunta existente, el sistema muestra su contenido, respuesta correcta y estado; una pregunta inexistente se informa como no encontrada.
+\item La búsqueda puede limitar resultados por estado, dificultad, competencia, tema, subtema o texto, de acuerdo con los filtros solicitados.
+\item El autor o administrador puede corregir el contenido mientras la pregunta está en Borrador.
+\item Si se intenta modificar el contenido fuera de Borrador, el sistema rechaza la operación y conserva el contenido previamente guardado.
+\item Un usuario sin token válido no puede acceder a las operaciones del Banco; una operación de escritura solo la realizan los roles autorizados.
+\end{enumerate}
 
 \subsection{Épica: asegurar calidad de preguntas (HU03)}
-Como autor, quiero recibir una explicación cuando una pregunta no cumple las reglas acordadas para corregirla antes de que se incorpore al banco. Los criterios verificables se resumen en `RULES.md` y se aplican antes de guardar.
+\textbf{Historia.} Como autor, quiero recibir una explicación cuando una pregunta no cumple las reglas acordadas para corregirla antes de que se incorpore al banco.
+
+\textbf{Alcance funcional.} El servicio valida la estructura al crear o modificar una pregunta y devuelve el resultado de validación; no existe un paso de revisión humana para estas reglas.
+
+\textbf{Criterios de aceptación observables}
+\begin{enumerate}[leftmargin=*]
+\item El sistema rechaza un contexto ausente o menor de veinte caracteres.
+\item El sistema rechaza una pregunta directa que no cumpla el formato acordado: longitud mínima, un único signo de interrogación y signo final de pregunta.
+\item El sistema exige cinco opciones de respuesta en total, una correcta y cuatro distractores.
+\item El sistema rechaza las expresiones «Todas las anteriores» y «Ninguna de las anteriores» en las opciones.
+\item Cada opción debe tener contenido, al menos tres caracteres, iniciar con mayúscula y no duplicar otra opción.
+\item El índice de respuesta correcta debe señalar una opción existente y no vacía, sin duplicidad con otra opción.
+\item Nombre, justificación, bibliografía, competencia, tema, subtema y dificultad deben estar presentes.
+\item Cuando una regla falla, el sistema identifica el problema y no guarda la pregunta como válida; cuando todas se cumplen, permite continuar con la operación solicitada.
+\end{enumerate}
 
 \subsection{Épica: administrar el ciclo de vida (HU04)}
-Como autor, revisor o administrador, quiero que cada pregunta avance solo por etapas permitidas y que el historial muestre quién realizó cada cambio. Las preguntas archivadas no se reactivan ni se borran físicamente.
+\textbf{Historia.} Como autor, revisor o administrador, quiero que cada pregunta avance solo por etapas permitidas y que el historial muestre quién realizó cada cambio.
+
+\textbf{Flujo de estados.} Borrador → Pendiente de revisión → En revisión → Aprobada → Publicada → Archivada. También se admiten los retornos y rechazos definidos por el código: Pendiente de revisión puede volver a Borrador; En revisión puede terminar en Aprobada o Rechazada; Rechazada puede volver a Borrador o archivarse; Aprobada puede archivarse. Archivada es terminal.
+
+\textbf{Criterios de aceptación observables}
+\begin{enumerate}[leftmargin=*]
+\item Una pregunta nueva comienza en Borrador y el sistema permite únicamente las transiciones definidas para su estado actual.
+\item El sistema rechaza una transición no permitida y conserva el estado vigente.
+\item Todo cambio de estado efectivo queda registrado con estado anterior, estado nuevo, usuario y fecha, y puede consultarse en Auditoría.
+\item Solicitar el estado que la pregunta ya tiene no crea un segundo registro de cambio.
+\item Una pregunta archivada no puede reactivarse ni borrarse físicamente.
+\item Crear o editar contenido corresponde a Administrador o Autor; cambiar estado corresponde a Administrador, Autor o Revisor, siempre con credencial válida.
+\end{enumerate}
 
 \subsection{HU05 implementada parcialmente: revisión por pares}
-Como revisor, quiero tomar una revisión y registrar un dictamen para que el Banco avance la pregunta. El servicio impide que la revise su propio autor y exige observaciones al rechazar. La asignación automática y una rúbrica completa quedan fuera del alcance verificado.
+\textbf{Historia.} Como revisor, quiero tomar una revisión y registrar un dictamen para que el Banco avance la pregunta.
+
+\textbf{Criterios de aceptación observables}
+\begin{enumerate}[leftmargin=*]
+\item Cuando una pregunta llega a Pendiente de revisión, el servicio de Revisión crea una revisión pendiente a partir del evento recibido.
+\item El autor que solicitó la revisión no puede revisar su propia pregunta.
+\item Solo un revisor autorizado puede tomar una revisión pendiente; una revisión tomada no puede ser tomada por otro revisor.
+\item Al tomarla, el servicio solicita al Banco que avance la pregunta a En revisión; si el Banco no confirma, la revisión no se presenta como tomada correctamente.
+\item El revisor que tomó la revisión puede emitir un dictamen de aprobación o rechazo; el Banco realiza el cambio de estado.
+\item Un rechazo sin observaciones se rechaza.
+\item Las entregas repetidas del mismo evento no crean revisiones duplicadas.
+\end{enumerate}
+
+\textbf{Límite de alcance.} La asignación automática de revisores y una rúbrica/formato completo de evaluación no están implementados; por ello HU05 se considera parcial, no aceptada en su totalidad.
+
+\subsection{Fuente de verificación}
+Los criterios anteriores resumen el comportamiento comprobado en los controladores, servicios, filtros y pruebas automatizadas de los cuatro módulos; las reglas detalladas se mantienen en \texttt{RULES.md}. Constituyen criterios funcionales comprobables para esta versión. El registro del Product Backlog y la conformidad formal del Product Owner son evidencias de gestión y no se infieren del código.
 
 \subsection{Roles y permisos observados}
 \begin{tabularx}{\textwidth}{p{3.5cm}X}
@@ -74,12 +136,12 @@ Como revisor, quiero tomar una revisión y registrar un dictamen para que el Ban
 Crear o editar pregunta & \texttt{ADMINISTRADOR} o \texttt{AUTOR\_PREGUNTAS} \\
 Cambiar estado & \texttt{ADMINISTRADOR}, \texttt{AUTOR\_PREGUNTAS} o \texttt{REVISOR} \\
 Consultar preguntas y estadísticas & Se valida token; el controlador no aplica un rol específico \\
-Tomar revisión o emitir dictamen & `REVISOR` o `ADMINISTRADOR`, con reglas de pertenencia \\
+Tomar revisión o emitir dictamen & Revisor o Administrador, con reglas de pertenencia \\
 \bottomrule
 \end{tabularx}
 
 \section{Prototipos y usabilidad}
-No hay prototipos de la iteración 2 verificables en los archivos fuente enumerados. \pendiente{El equipo debe adjuntar prototipos vigentes y resultados de evaluación de usabilidad.}
+En los artefactos revisados no se encontró evidencia de prototipos ni de una evaluación de usabilidad correspondiente a esta arquitectura. La usabilidad se trata mediante el escenario de calidad propuesto en la sección siguiente.
 
 \section{Escenarios de calidad}
 Los escenarios técnicos del SAD y MiniQAW se reexpresan como esfuerzo de las personas involucradas, no como rendimiento medido. Todas las cifras siguientes son \textbf{propuesta, por validar con el equipo y el profesor}; no son resultados obtenidos.
@@ -140,10 +202,9 @@ La matriz detallada de evidencia y acciones está en \texttt{docs/CUMPLIMIENTO\_
 Ejecutadas con Maven el 2026-11-22. Los conteos no equivalen a cobertura; no se encontró medición de cobertura.
 
 \section{Gestión del proyecto}
-\pendiente{Jira: adjuntar Product Backlog, Sprint Backlog, Task Board y Burndown Chart como evidencia del curso.}
+El Product Backlog, Sprint Backlog, Task Board y Burndown Chart se gestionan en Jira/Trello y se entregan mediante el acceso al proyecto. No se duplican como artefactos generados en este SAD.
 
 \section{Sustentación y repositorio}
-Repositorio: \url{https://github.com/BastianRu/proyecto-saberpro-ing-software-II}.\\
-\pendiente{Equipo: adjuntar enlace o evidencia del video de sustentación.}
+Repositorio de código: \href{https://github.com/BastianRu/proyecto-saberpro-ing-software-II}{GitHub del proyecto}. La participación de los integrantes se consulta en el historial del repositorio. La evidencia audiovisual se entrega por el medio definido para el curso.
 
 \end{document}
