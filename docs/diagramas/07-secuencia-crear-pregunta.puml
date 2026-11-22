@@ -1,0 +1,26 @@
+@startuml
+title Secuencia: crear pregunta
+actor Autor
+participant "banco-service\nQuestionController" as API
+participant "BearerAuthFilter" as Auth
+participant "QuestionService" as Service
+participant "QuestionPipeline" as Pipeline
+database "banco.db" as DB
+participant "RabbitMQ\nsaberpro.events" as MQ
+participant "auditoria-service" as Audit
+Autor -> API : POST /preguntas + Bearer
+API -> Auth : validar token
+Auth --> API : usuario autenticado
+API -> Service : createQuestion(draft, login)
+Service -> Pipeline : run(draft)
+Pipeline --> Service : borrador validado
+Service -> DB : guardar pregunta + opciones
+Service -> MQ : question.created (eventId)
+MQ -> Audit : auditoria.preguntas / question.created
+Audit -> Audit : deduplicar eventId y guardar
+API --> Autor : 201 Created
+note over Service,MQ
+Si el broker falla, la operación local puede persistir sin evento; no hay Outbox.
+Fuentes: banco-service/.../api/QuestionController.java, service/QuestionService.java, pipeline/QuestionPipeline.java, events/RabbitEventPublisher.java; auditoria-service/.../events/QuestionEventListener.java.
+end note
+@enduml

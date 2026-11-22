@@ -1,0 +1,29 @@
+@startuml
+title Secuencia: revisión por pares de una pregunta
+actor Autor
+actor Revisor
+participant "banco-service" as Banco
+participant "RabbitMQ" as MQ
+participant "revision-service" as Revision
+database "revision.db" as RDB
+participant "auditoria-service" as Auditoria
+database "auditoria.db" as ADB
+Autor -> Banco : PATCH /preguntas/{id}/estado\nPENDIENTE_REVISION + token
+Banco -> Banco : validar transición y persistir
+Banco -> MQ : question.state-changed
+MQ -> Revision : revision.preguntas
+Revision -> RDB : guardar revisión pendiente + eventId
+MQ -> Auditoria : auditoria.preguntas
+Auditoria -> ADB : guardar registro (eventId UNIQUE)
+Revisor -> Revision : POST /revisiones/{id}/tomar
+Revision -> Banco : PATCH /preguntas/{id}/estado EN_REVISION\nBearer del revisor
+Banco -> MQ : question.state-changed
+Revisor -> Revision : POST /revisiones/{id}/dictamen
+Revision -> Banco : PATCH estado APROBADA o RECHAZADA\nBearer del revisor
+Banco -> MQ : question.state-changed
+Revision -> RDB : guardar dictamen y estado
+note over Banco,Revision
+Banco es dueño del ciclo de vida. La llamada y persistencia de revisión no comparten transacción.
+Fuentes: revision-service/.../service/ReviewService.java, RestBancoClient.java, events/QuestionStateListener.java; banco-service/.../api/QuestionController.java; auditoria-service/.../events/QuestionEventListener.java.
+end note
+@enduml

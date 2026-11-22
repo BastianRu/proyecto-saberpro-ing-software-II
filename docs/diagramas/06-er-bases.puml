@@ -1,0 +1,68 @@
+@startuml
+title Esquemas SQLite por servicio y referencias lógicas
+hide methods
+hide stereotypes
+entity "auth.db: users" as users {
+ * id : INTEGER <<PK>>
+ --
+ login : TEXT <<UNIQUE>>
+ full_name : TEXT
+ role : TEXT (catálogo lógico)
+ status : TEXT
+ hashed_password : TEXT
+}
+entity "banco.db: questions" as questions {
+ * id : TEXT <<PK>>
+ --
+ name : TEXT
+ statement : TEXT
+ correct_index : INTEGER
+ state : TEXT (catálogo lógico)
+ context : TEXT
+ justification : TEXT
+ bibliography : TEXT
+ competence : TEXT
+ topic : TEXT
+ subtopic : TEXT
+ difficulty : TEXT
+}
+entity "banco.db: question_options" as options {
+ * question_id : TEXT <<PK, FK local>>
+ * position : INTEGER <<PK>>
+ --
+ text : TEXT
+}
+entity "revision.db: reviews" as reviews {
+ * id : INTEGER <<PK>>
+ --
+ question_id : TEXT (referencia externa)
+ requested_by : TEXT
+ requested_at : TEXT
+ status : TEXT (catálogo lógico)
+ reviewer : TEXT
+ started_at : TEXT
+ decision : TEXT
+ observations : TEXT
+ completed_at : TEXT
+}
+entity "revision.db: processed_events" as processed {
+ * event_id : TEXT <<PK>>
+}
+entity "auditoria.db: audit_records" as audit {
+ * id : INTEGER <<PK>>
+ --
+ event_id : TEXT <<UNIQUE>>
+ question_id : TEXT (referencia externa)
+ event_type : TEXT
+ previous_state : TEXT
+ new_state : TEXT
+ username : TEXT
+ occurred_at : TEXT
+}
+questions ||--|{ options : "1 pregunta / exactamente 5 opciones por regla de negocio"
+reviews }o..|| questions : "question_id sin FK; cero o varias revisiones por pregunta"
+audit }o..|| questions : "question_id sin FK; cero o varios registros por pregunta"
+note bottom
+Tablas leídas de AuthConfig, BancoConfig, ReviewConfig y AuditConfig. Catálogos Role, estados y decisiones se almacenan como TEXT; no hay tablas catálogo. Multiplicidad de 5 opciones proviene de DistractorCountFilter, no de restricción SQL.
+end note
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_LEFT_RIGHT()
+title C4 Nivel 2 — Contenedores y bases por servicio
+Person(actor, "Personas usuarias", "Autor, Revisor, Administrador, Docente y Estudiante")
+Container_Boundary(system, "Banco de Preguntas Saber Pro") {
+  Container(ui, "Cliente JavaFX", "JavaFX", "Solo login remoto; banco local heredado")
+  Container(auth, "auth-service", "Spring Boot :8081", "Usuarios y token")
+  Container(banco, "banco-service", "Spring Boot :8082", "Preguntas, validación y estados")
+  Container(rev, "revision-service", "Spring Boot :8083", "Revisión por pares")
+  Container(aud, "auditoria-service", "Spring Boot :8084", "Historial")
+  ContainerDb(authdb, "auth.db", "SQLite", "Usuarios")
+  ContainerDb(bancodb, "banco.db", "SQLite", "Preguntas y opciones")
+  ContainerDb(revdb, "revision.db", "SQLite", "Revisiones y eventId procesados")
+  ContainerDb(auddb, "auditoria.db", "SQLite", "Registros de auditoría")
+}
+System_Ext(rabbit, "RabbitMQ", "Exchange topic saberpro.events")
+Rel(actor, ui, "Usa", "JavaFX")
+Rel(ui, auth, "Login", "REST :8081")
+Rel(actor, auth, "Registro y login", "REST")
+Rel(actor, banco, "Operaciones de preguntas", "REST")
+Rel(actor, rev, "Operaciones de revisión", "REST")
+Rel(actor, aud, "Consulta historial", "REST")
+Rel(auth, authdb, "Lee/escribe")
+Rel(banco, bancodb, "Lee/escribe")
+Rel(rev, revdb, "Lee/escribe")
+Rel(aud, auddb, "Lee/escribe")
+Rel(banco, rabbit, "Publica question.created / question.state-changed", "AMQP")
+Rel(rabbit, rev, "revision.preguntas: question.state-changed", "AMQP")
+Rel(rabbit, aud, "auditoria.preguntas: question.*", "AMQP")
+Rel(rev, banco, "PATCH /preguntas/{id}/estado con token revisor", "REST")
+note bottom
+Respaldo: docker-compose.yml (solo RabbitMQ); */src/main/resources/application.properties; CONTEXTO_PROYECTO.md §5; src/main/java/.../MainApp.java.
+No hay Dockerfiles de aplicaciones ni balanceador configurado.
+end note
+@enduml

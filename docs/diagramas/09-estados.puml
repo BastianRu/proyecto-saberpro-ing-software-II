@@ -1,0 +1,19 @@
+@startuml
+title Máquina de estados de Question
+[*] --> BORRADOR
+BORRADOR --> PENDIENTE_REVISION : submitForReview
+PENDIENTE_REVISION --> EN_REVISION : startReview
+PENDIENTE_REVISION --> BORRADOR : returnToDraft
+EN_REVISION --> APROBADA : approve
+EN_REVISION --> RECHAZADA : reject
+RECHAZADA --> BORRADOR : returnToDraft
+RECHAZADA --> ARCHIVADA : archive
+APROBADA --> PUBLICADA : publish
+APROBADA --> ARCHIVADA : archive
+PUBLICADA --> ARCHIVADA : archive
+ARCHIVADA --> [*]
+note right of ARCHIVADA
+Estado terminal; ninguna transición saliente.
+Fuentes: banco-service/src/main/java/com/unicauca/lisw2t2g08/banco/domain/QuestionStates.java y *State.java.
+end note
+@enduml
