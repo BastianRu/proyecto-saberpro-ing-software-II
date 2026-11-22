@@ -43,7 +43,7 @@ Se integró `origin/main` como base porque representa la iteración más recient
 - Se resolvió el conflicto del reloj eligiendo UTC en `auth-service`.
 - Se restauraron pruebas de vector fijo de token en `auth-service` y `banco-service`, adaptando el verificador al contrato de texto/rol usado en la rama actual.
 - Se retiraron pruebas y código cliente de `validacion-service` que ya no existe en el diseño resultante.
-- Se preservó `docs_2/` como contenido no rastreado aportado localmente y se rehízo `SAD.docx` con la plantilla `SAD.docx`; se generó también `SAD.pdf` para revisión visual.
+- En ese momento se preservó `docs_2/` como contenido local de trabajo y se rehízo `SAD.docx` con la plantilla del curso; se generó `SAD.pdf` para revisión. Posteriormente, la fuente y el PDF se incorporaron al repositorio como SAD oficial.
 
 ## Verificación después de integrar
 

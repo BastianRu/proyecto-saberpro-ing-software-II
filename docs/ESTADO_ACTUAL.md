@@ -51,8 +51,7 @@ registran aquí y, cuando aplica, en `docs/PENDIENTES.md`.
    y de los README verificados.
 2. **`validacion-service` usa Spring Boot 3.4.5**, no 3.3.5 como el resto. No se cambió la
    versión porque no hacía falta para las tareas y hacerlo implicaba un riesgo innecesario.
-3. **No se entregó el paquete `docs_latex_iteracion2_v2.zip`** en el entorno de trabajo, por
-   lo que no hay carpeta `docs/latex/`. Queda registrado en pendientes.
+3. En la fecha de este registro no se había entregado el paquete `docs_latex_iteracion2_v2.zip`; este dato corresponde únicamente al estado histórico del 2026-11-18.
 4. **El JDK del entorno es 27**, aunque los `pom.xml` declaran `java.version=17`. Las pruebas
    pasan igualmente; no se modificaron los `pom.xml` por este motivo.
 5. **No hay consumidores de los eventos RabbitMQ** (`questions.exchange`). El banco publica

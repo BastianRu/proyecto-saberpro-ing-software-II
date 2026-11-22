@@ -1,6 +1,6 @@
 # Sprint 2 — objetivo y Definition of Done
 
-> **Estado:** borrador documental verificado contra `main` el 2026-11-22. Aprobación, aceptación del Product Owner y evidencias de Jira no se pueden inferir del código.
+> **Estado:** resumen documental basado en la verificación del código realizada el 2026-11-22. La gestión del Sprint y la aceptación se acreditan mediante acceso al gestor del equipo, no por este archivo.
 
 ## Sprint Goal (borrador)
 

@@ -1,7 +1,7 @@
 # Matriz de cumplimiento del Sprint 2
 
 > **Fecha de verificación:** 2026-11-22  
-> **Rama inspeccionada:** `main` (HEAD: `feac29b`)  
+> **Línea base de código inspeccionada:** `main` (HEAD observado durante la revisión: `feac29b`)  
 > **Método:** lectura del código, configuración, documentación técnica vigente y ejecución de `mvn test` en los cuatro servicios.  
 > **Veredicto por criterio**: «Cumple» se usa únicamente cuando hay evidencia suficiente de implementación; la escalabilidad no se considera probada si no existen mediciones, pruebas de carga o configuración de despliegue escalable.
 

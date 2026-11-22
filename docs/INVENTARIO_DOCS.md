@@ -1,7 +1,7 @@
 # Inventario de Documentación del Repositorio
 
-> **Fecha de verificación:** 2026-11-22  
-> **Rama de trabajo:** `docs-iteracion2`  
+> **Fecha de verificación:** 2026-11-22 (estado de código); organización documental revisada antes de la entrega.  
+> **Rama de documentación:** `docs-iteracion2`  
 > **Equipo:** Juan Manuel Meneses Daza, Juan Sebastian Muñoz Ruiz, Juan Sebastian Molano Bolaños, Santiago Rodríguez Bolaños  
 > **Metodología de inspección:** Contraste estricto contra el código fuente (`auth-service`, `banco-service`, `revision-service`, `auditoria-service`, `src/`), `pom.xml`, archivos de configuración y ejecución de pruebas unitarias con Maven.
 
@@ -30,7 +30,7 @@
 | `docs/MiniQAW_Banco_Preguntas_Saber_Pro.xlsx` | Hoja de cálculo original del taller QAW con escenarios, diagrama de empatía y priorización. | **Histórico (Base corte 1)** | Se conserva intacta como insumo del corte 1; contiene escenarios de monolito y medidas técnicas que no son resultados de Sprint 2. |
 | `docs/MiniQAW_Banco_Preguntas_Saber_Pro_v2.xlsx` | Copia de trabajo con contexto de iteración 2 y propuestas de esfuerzo humano en escenarios refinados. | **Vigente como borrador** | Generada desde el original con `openpyxl`; cifras y duraciones etiquetadas como propuestas por validar, no medidas. |
 | `docs/Documento_Arquitectura_Banco_Preguntas_Saber_Pro.pdf` | Documento de arquitectura entregado en la iteración 1 (primer corte, monolito JavaFX en capas). | **Histórico** | Describe la iteración 1 del monolito local en JavaFX. Se mantiene por trazabilidad académica. |
-| `docs/Decisiones_Tecnicas_Banco_Preguntas_Saber_Pro.pdf` | Documento de decisiones técnicas iniciales del primer corte. | **Histórico** | Sirve como fuente de contraste directo para el documento `Decisiones_Iniciales_vs_Finales.tex`. |
+| `docs/Decisiones_Tecnicas_Banco_Preguntas_Saber_Pro.pdf` | Documento de decisiones técnicas iniciales del primer corte. | **Histórico** | Sirve como fuente de contraste para `docs/borradores/latex-sad/Decisiones_Iniciales_vs_Finales.tex` (borrador de apoyo, no entregable). |
 | `docs_2/SAD.docx` y `docs_2/SAD.pdf` | Fuente editable y PDF del SAD oficial de la iteración 2. | **Vigente (Documento fuente oficial)** | Elaborado con plantilla del curso; se entrega una copia del PDF en `entregables/sprint-2/SAD_Banco_Preguntas_Iteracion2.pdf`. |
 | `docs_2/Documento_Arquitectura_Iteracion2_v2.pdf` | PDF preliminar de arquitectura de la iteración 2. | **Histórico** | Antecedente conservado; no es el SAD oficial ni el PDF designado para entrega. |
 | `docs/borradores/latex-sad/` | Fuentes LaTeX y PDFs alternativos de apoyo. | **Borrador — no entregar** | Se reubicaron y etiquetaron para distinguirlos claramente del SAD oficial. |
