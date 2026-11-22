@@ -1,5 +1,7 @@
-# Comparación e integración de las dos versiones
+# Histórico: Comparación e integración de las dos versiones
 
+> **Histórico — registro de integración del 2026-11-20; no es guía de ejecución vigente.** Se conserva la comparación y sus decisiones como trazabilidad. Para el estado actual consulte `README.md`, los README de los servicios y `docs/decisiones-iteracion-2.md`.
+>
 > Comparación realizada entre la rama local `integracion-iteracion2` (antes de integrar, `522fad5`) y la versión actualizada de `origin/main` (`97d3233`). La integración quedó en `c227983`. Se mantuvo una referencia de respaldo `backup-integracion-iteracion2` al estado anterior.
 
 ## Resumen de decisión

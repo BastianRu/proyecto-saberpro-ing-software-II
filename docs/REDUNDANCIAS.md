@@ -1,36 +1,36 @@
 # Información redundante entre servicios
 
-> Verificado contra el código de la rama `integracion-iteracion2` el
-> 2026-11-18. Cada afirmación de este documento se comprobó leyendo los archivos
-> citados y comparándolos con `diff`/`grep`; no se refactorizó nada.
+> **Verificado contra el código actual el 2026-11-22.** La repetición de contratos es deliberada cuando permite que cada servicio conserve su independencia; debe gestionarse mediante compatibilidad documentada y pruebas, no mediante acoplamiento de código compartido.
 
 ## Criterio
 
-El proyecto prohíbe compartir clases mediante una librería común: cada servicio
-conserva su copia mínima de los contratos. Por eso hay tipos repetidos. La
-pregunta no es «¿se repiten?» (sí), sino «¿la repetición es un contrato
-necesario o una duplicación que conviene reducir?».
+Los servicios son módulos Maven independientes. No comparten una librería Java de dominio; algunos valores y formatos deben coincidir porque viajan por token, JSON o eventos. `src/` representa el monolito de la primera iteración y no es dependencia de los servicios.
 
-## Tabla
+## Contratos repetidos verificados
 
-| Elemento | Dónde está | Por qué existe | ¿Es aceptable? | Acción recomendada |
-|---|---|---|---|---|
-| `Role` | `auth-service/.../auth/domain/Role.java`, `banco-service/.../banco/domain/Role.java`, `src/main/java/.../domain/Role.java` | `auth-service` lo usa para registrar y firmar el rol dentro del token; `banco-service` lo usa para autorizar operaciones; `src/` es la copia del monolito de la iteración 1. Las constantes son las mismas (`ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR`, `DOCENTE`, `ESTUDIANTE`); solo cambian el paquete y el formato. | **Sí, como contrato de cable.** Es un enum que viaja dentro del token y de las peticiones. Unificarlo con una librería acoplaría los servicios. | Mantener los cinco valores sincronizados. Si se agrega un rol, actualizar auth, banco y la documentación en el mismo cambio. |
-| `AuthToken` | `auth-service/.../auth/domain/AuthToken.java`, `banco-service/.../banco/domain/AuthToken.java` | `auth-service` lo construye al emitir el token; `banco-service` lo construye al verificarlo. Tiene los mismos cuatro campos (`subject`, `role`, `expiresAt`, `signature`) y la misma regla `isExpired`. | **Sí.** Es un DTO de contrato interno de cada servicio; compartirlo exigiría una librería común. | Mantener el orden y el significado de los campos. El formato exacto está cubierto por la prueba de vector fijo en ambos servicios. |
-| `DifficultyLevel` | `banco-service/.../banco/domain/DifficultyLevel.java`, `validacion-service/.../validacion/domain/DifficultyLevel.java`, `src/main/java/.../domain/DifficultyLevel.java` | `banco-service` lo persiste y lo expone; `validacion-service` lo recibe en `POST /validaciones`; `src/` es la versión del monolito. Los valores (`BAJA`, `MEDIA`, `ALTA`) y las etiquetas coinciden; solo cambian el paquete y los comentarios. | **Sí, como contrato JSON.** El nombre del enum es parte del cuerpo que viaja entre servicios. | Mantener los tres valores. Un valor nuevo debe añadirse en ambos servicios y en el pipeline antes de aceptarlo. |
-| `QuestionDraft` | `banco-service/.../banco/domain/QuestionDraft.java`, `validacion-service/.../validacion/domain/QuestionDraft.java`, `src/main/java/.../domain/QuestionDraft.java` | `banco-service` lo arma desde `QuestionRequest` y lo envía a validación; `validacion-service` lo recibe y lo recorre con el pipeline; `src/` es la versión del monolito. Las tres copias tienen los mismos once campos y los mismos accesores (verificado); los paquetes y algunos comentarios cambian. | **Sí, pero es la duplicación más delicada.** Cualquier campo nuevo debe viajar en el JSON de `POST /validaciones`; si solo se agrega en un lado, el pipeline no lo verá. | Documentar el contrato en `RULES.md` y en los README. Si se agrega un campo, actualizar `QuestionDraft` de banco, `QuestionDraft`/`QuestionDraftRequest` de validación y `RestValidationClient`. |
-| `ValidationException` | `banco-service/.../banco/client/ValidationException.java`, `validacion-service/.../validacion/pipeline/ValidationException.java`, `src/main/java/.../pipeline/ValidationException.java` | En validación y en el monolito la lanza un filtro cuando una regla falla. En banco es la excepción con la que el cliente REST traduce un `422` remoto. No son la misma clase ni tienen el mismo origen: banco la usa para decidir el `422` local; validación la lanza desde el pipeline. | **Parcialmente.** La duplicación de nombre confunde, aunque la semántica de «reglas incumplidas» es la misma. | No unificarlas (sería una librería común). Si se toca el código, valorar renombrar la de banco a `RemoteValidationException`; no se hizo para no cambiar contratos internos sin necesidad. |
-| Secreto del token | `auth-service/src/main/resources/application.properties` (`auth.token.secret`) y `banco-service/src/main/resources/application.properties` (`banco.token.secret`) | `auth-service` firma con HMAC-SHA256 y `banco-service` verifica con el mismo secreto. Ambos archivos tienen hoy el mismo valor de desarrollo (`dev-secret-cambiar-en-produccion-0123456789`). | **Sí, pero es configuración operativa, no código.** No se puede eliminar sin un servicio de configuración o un secreto compartido externo, que el proyecto no usa. | En producción, inyectar el mismo secreto por variables de entorno en ambos servicios y no dejar el valor por defecto. Está anotado en `docs/PENDIENTES.md`. |
-| Código del monolito en `src/` | `src/main/java/com/unicauca/lisw2t2g08/` | Es la implementación de la iteración 1 (JavaFX + SQLite): `User`, `Role`, `PasswordPolicy`, `Question`, `QuestionState`, `QuestionDraft`, el pipeline de filtros y las vistas. Los servicios de la iteración 2 no lo importan (verificado con `grep`). | **Sí, como legado histórico.** No participa en la ejecución de los microservicios. Borrarlo o moverlo no forma parte de este trabajo y podría romper la entrega de la iteración 1. | No tocarlo. Está marcado como versión anterior en el `README.md` raíz. |
+| Elemento | Dónde se repite | Motivo | Riesgo y criterio de mantenimiento |
+|---|---|---|---|
+| Roles (`ADMINISTRADOR`, `AUTOR_PREGUNTAS`, `REVISOR`, `DOCENTE`, `ESTUDIANTE`) | `auth-service/.../auth/domain/Role.java`; `banco-service/.../banco/domain/Role.java`; `revision-service/.../revision/domain/Role.java`; `auditoria-service/.../auditoria/domain/Role.java`; monolito `src/.../domain/Role.java`. | Auth emite el rol; los servicios consumidores del token autorizan operaciones localmente; el monolito preserva la iteración anterior. | Contrato sensible: cambiar un valor requiere coordinar emisor, verificadores, autorización, pruebas y documentación. No importar clases de un servicio a otro. |
+| Token (`subject`, rol, vencimiento y firma HMAC-SHA256) | Emisor `auth-service/.../auth/service/TokenSigner.java`; verificadores `*/security/TokenVerifier.java` en Banco, Revisión y Auditoría; formatos auxiliares `AuthToken` locales. | Verificación autónoma evita solicitar a Auth en cada llamada. | Los verificadores deben mantener idénticos parsing, codificación, reloj y secreto. Hay pruebas de vector fijo en Auth y Banco; ampliar pruebas de contrato para Revisión y Auditoría es una mejora sugerida, no un hecho actual. |
+| Secreto del token | `auth-service/src/main/resources/application.properties` (`auth.token.secret`) y las propiedades `auth.token.secret` de Banco, Revisión y Auditoría. | El emisor firma y cada servicio valida localmente. | En el repositorio hay un valor de desarrollo duplicado. En despliegue no local debe inyectarse y rotarse coordinadamente; no registrar el valor en documentación externa. |
+| Códigos de estado de pregunta | Banco (`domain/*State.java` y `QuestionStates.java`), Revisión/Auditoría como texto en mensajes y registros, y cliente JavaFX en `src/`. | El Banco es dueño del ciclo de vida; consumidores necesitan proyectar estados recibidos, sin acceder a su base. | Cambios en nombres/códigos requieren compatibilidad hacia adelante/atrás en consumidores. Las referencias `question_id` no son llaves foráneas entre bases. |
+| Contrato de eventos | Banco: `events/QuestionCreatedEvent.java`, `QuestionStateChangedEvent.java`; Revisión: `events/QuestionStateMessage.java`; Auditoría: `events/QuestionEventMessage.java`. | Cada servicio define DTO local para sus responsabilidades, sin dependencia binaria. | Mantener nombres/semántica de `eventId`, `questionId`, `username`, `occurredAt`, estados y claves de routing `question.created`, `question.state-changed`. `revision-service` consume solo el segundo tipo; Auditoría consume ambas claves. |
+| Contrato de petición al Banco | `revision-service/.../service/RestBancoClient.java` y Banco `api/QuestionController.java` (`PATCH /preguntas/{id}/estado`). | Revisión delega al dueño del ciclo de vida; pasa token del revisor para conservar identidad y autorización. | El endpoint, payload y respuestas deben evolucionar de forma coordinada. No se comparte el DTO Java. |
+| Entidad `Question` / pregunta | Banco contiene la entidad completa; Revisión guarda `question_id` como texto en `reviews`; Auditoría guarda `question_id` en `audit_records`; JavaFX conserva un modelo local separado. | Los servicios de revisión y auditoría referencian la identidad sin ser dueños de los datos de la pregunta. | Las referencias cruzadas no son FK. Borrados físicos están ausentes en Banco; los estados y relaciones se validan vía eventos/API. Evitar replicar detalles de la entidad sin necesidad de negocio. |
+| Nivel de dificultad | Banco y monolito tienen tipos locales; el valor se transporta como parte de solicitudes de pregunta. | Cada módulo compila sin depender de otro. | Mantener códigos `BAJA`, `MEDIA`, `ALTA` compatibles con API y almacenamiento. |
 
-## Observaciones
+## Lo que no debe confundirse con duplicación accidental
 
-1. **No hay dependencia de código entre servicios.** `banco-service` no importa
-   paquetes de `auth-service` ni de `validacion-service`; solo comparte formato
-   de token y cuerpos JSON. `auth-service` no importa nada de los otros.
-2. **La duplicación de `Role`, `AuthToken`, `DifficultyLevel` y `QuestionDraft`
-   es el precio de no tener una librería común.** Es aceptable mientras los
-   contratos estén documentados y probados. La prueba de vector fijo del token
-   cubre el caso más sensible.
-3. **`src/` no es una dependencia de los servicios.** Es la versión de la
-   primera iteración; se conserva por trazabilidad académica.
+- `question_id` en `revision.db` y `auditoria.db` es referencia por identificador, no una copia de la fila `questions`; no existe llave foránea entre SQLite independientes.
+- El historial canónico expuesto en iteración 2 se conserva en Auditoría como proyección de eventos; el Banco persiste su propia pregunta y no importa datos de Auditoría.
+- Los DTO de eventos son copias locales; compartirlos en un JAR común acoplaría despliegues y versiones.
+- El patrón Observer de `src/` opera dentro de la GUI local y no sustituye a RabbitMQ.
+
+## Reglas de cambio recomendadas
+
+1. Todo cambio de contrato debe citarse en un ADR o decisión y actualizar productores, consumidores y pruebas afectadas en el mismo cambio coordinado.
+2. Mantener compatibilidad de nombres de eventos y campos; validar con `EventContractTest` en Auditoría y pruebas de contrato de Revisión.
+3. No crear una dependencia de código entre servicios para eliminar una repetición pequeña; priorizar contratos estables y pruebas.
+4. Toda nueva referencia entre servicios debe identificarse como referencia lógica, sin aparentar una FK que SQLite no puede hacer cumplir entre archivos.
+
+**Fuentes:** `docs/decisiones-iteracion-2.md`; clases citadas arriba; `banco-service/src/main/java/.../config/BancoConfig.java`, `revision-service/src/main/java/.../config/ReviewConfig.java` y `auditoria-service/src/main/java/.../config/AuditConfig.java`.

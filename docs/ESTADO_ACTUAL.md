@@ -1,5 +1,6 @@
-# Estado actual del repositorio (línea base)
+# Histórico: Estado del repositorio al 2026-11-18 (línea base)
 
+> **Histórico — no representa el estado vigente.** Esta fotografía precede la integración de Revisión, Auditoría y el SAD final, y se conserva como evidencia de la línea base.  
 > Fecha de verificación: 2026-11-18
 > Rama de trabajo: `integracion-iteracion2` (creada desde `main`).
 > No se hizo `push`, no se modificó `main` y no se tocaron las ramas de talleres.
