@@ -1,5 +1,0 @@
-\babel@toc {spanish}{}\relax 
-\contentsline {section}{\numberline {1}Propósito y fuentes}{2}{section.1}%
-\contentsline {section}{\numberline {2}Decisiones iniciales frente a finales}{2}{section.2}%
-\contentsline {section}{\numberline {3}Qué se mantuvo}{4}{section.3}%
-\contentsline {section}{\numberline {4}Decisiones abiertas}{4}{section.4}%
