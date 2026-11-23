@@ -6,7 +6,7 @@ Guía para iniciar los servicios que existen en esta iteración. El proyecto man
 
 - JDK 17 o superior, Maven 3.8 o superior.
 - Docker Compose para levantar RabbitMQ.
-- `curl` y `python3` son requeridos únicamente por `scripts/e2e.sh`; dicho script apunta a una arquitectura anterior y no se debe usar como prueba actual.
+- Postman o `curl` para ejecutar manualmente el flujo (ver «Verificación de las pruebas»).
 
 ## Componentes y puertos
 
@@ -46,7 +46,7 @@ mvn -q test
 
 Estado verificado el 2026-11-22: Auth 21, Banco 94, Revisión 40 y Auditoría 9 pruebas ejecutadas; todas pasan. Son los conteos de Maven, no cobertura de líneas.
 
-La colección de Postman vigente es `postman/saberpro-microservicios.postman_collection.json`; sigue el flujo de los cuatro servicios. `scripts/e2e.sh` no está alineado: aún llama al antiguo `validacion-service`, y debe actualizarse antes de ejecutarlo.
+La colección de Postman vigente es `postman/saberpro-microservicios.postman_collection.json`; sigue el flujo de los cuatro servicios. No hay prueba automatizada de punta a punta; el script anterior se eliminó por apuntar al diseño con `validacion-service`.
 
 ## Archivos de datos y configuración
 
@@ -65,4 +65,4 @@ El secreto compartido tiene valor por defecto de desarrollo. Para un entorno no 
 - SQLite con una conexión compartida y métodos `synchronized` limita concurrencia y no sustenta evidencia de varias instancias compartiendo archivo.
 - Los listeners de Revisión y Auditoría tienen reintentos locales de hasta 3 intentos, sin cola DLQ declarada. Al agotarse, el mensaje no se reencola indefinidamente (`*.properties`).
 - Si RabbitMQ falla cuando Banco publica, el cambio de negocio puede persistir y el evento perderse; no se encontró Outbox.
-- `scripts/e2e.sh` es histórico/desactualizado; no ejecutar como verificación de la arquitectura actual.
+- No existe prueba automatizada de punta a punta; la verificación del flujo completo es manual con la colección de Postman.

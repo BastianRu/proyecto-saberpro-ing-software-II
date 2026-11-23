@@ -20,7 +20,7 @@
 8. **Alcance HU05:** quedan por definir o fuera de alcance asignación automática de revisores y rúbrica/formato completo; ver `docs/decisiones-iteracion-2.md`.
 9. **Esquema temporal del token:** el formato de vencimiento ISO-8601 compartido debe seguir siendo interoperable. Acordar el tratamiento de zonas horarias antes de distribuir servicios en entornos heterogéneos.
 10. **CI y cobertura:** no se encontró `.github/workflows/` ni configuración de cobertura JaCoCo. Definir automatización y umbral si el curso lo exige.
-11. **Script E2E:** `scripts/e2e.sh` llama al servicio eliminado y debe actualizarse antes de usarse. No se modifica aquí por ser script ejecutable.
+11. **Prueba de punta a punta:** el script anterior se eliminó por apuntar a `validacion-service`. Falta una prueba automatizada del flujo con los cuatro servicios y RabbitMQ.
 12. **Documentación de usuario y prototipos:** confirmar material de usuario y prototipos, que no pueden inferirse del código.
 
 ## Pendientes del profesor

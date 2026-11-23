@@ -123,8 +123,9 @@ base64url(subject|role|expiresAt).base64url(HMAC-SHA256(payload, secreto))
 ```
 
 - `base64url` sin relleno (`=`).
-- `expiresAt` es un `LocalDateTime` en formato ISO-8601, por ejemplo
-  `2026-11-04T13:00`.
+- `expiresAt` es un `LocalDateTime` ISO-8601 expresado en UTC, sin zona explícita,
+  por ejemplo `2026-11-04T13:00`. El emisor usa `Clock.systemUTC()` y los
+  verificadores deben comparar contra UTC.
 - El login no puede contener el caracter `|`.
 - `banco-service` verifica la firma y la vigencia sin llamar a este servicio.
 
