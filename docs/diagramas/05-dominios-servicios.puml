@@ -1,0 +1,71 @@
+@startuml
+title Dominios de Auth, Revisión y Auditoría
+package auth {
+  class User {
+    login
+    fullName
+    role
+    status
+    hashedPassword
+  }
+  enum Role {
+    ADMINISTRADOR
+    AUTOR_PREGUNTAS
+    REVISOR
+    DOCENTE
+    ESTUDIANTE
+  }
+  enum UserStatus {
+    ACTIVO
+    INACTIVO
+  }
+  class AuthToken {
+    subject
+    role
+    expiresAt
+    signature
+  }
+  User --> Role
+  User --> UserStatus
+}
+package revision {
+  class Review {
+    id
+    questionId
+    requestedBy
+    status
+    reviewer
+    decision
+    observations
+  }
+  enum ReviewStatus {
+    PENDIENTE
+    EN_CURSO
+    COMPLETADA
+    CANCELADA
+  }
+  enum ReviewDecision {
+    APROBAR
+    RECHAZAR
+  }
+  Review --> ReviewStatus
+  Review --> ReviewDecision
+}
+package auditoria {
+  class AuditRecord {
+    id
+    eventId
+    questionId
+    eventType
+    previousState
+    newState
+    username
+    occurredAt
+  }
+}
+Review ..> User : requestedBy/reviewer (identificador)
+AuditRecord ..> User : username (identificador)
+note bottom
+Respaldo: auth-service/src/main/java/.../auth/domain/; revision-service/src/main/java/.../revision/domain/; auditoria-service/src/main/java/.../auditoria/domain/. Las referencias son valores, no relaciones de FK.
+end note
+@enduml

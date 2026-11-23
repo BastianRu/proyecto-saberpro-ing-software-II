@@ -1,0 +1,17 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_LEFT_RIGHT()
+title C4 Nivel 1 — Contexto del Banco de Preguntas Saber Pro
+Person(autor, "Autor", "Crea y envía preguntas")
+Person(revisor, "Revisor", "Revisa preguntas y emite dictamen")
+Person(consulta, "Docente / Estudiante", "Consulta preguntas e historial")
+System(banco, "Banco de Preguntas Saber Pro", "Gestión de preguntas, autenticación, revisión y auditoría")
+System_Ext(rabbit, "RabbitMQ", "Broker de eventos")
+Rel(autor, banco, "Registra, crea y gestiona preguntas", "HTTPS/REST")
+Rel(revisor, banco, "Gestiona revisión", "HTTPS/REST")
+Rel(consulta, banco, "Consulta preguntas e historial", "HTTPS/REST")
+Rel(banco, rabbit, "Publica eventos de pregunta", "AMQP")
+note bottom of banco
+Respaldo: README.md; CONTEXTO_PROYECTO.md; servicios en auth-service/, banco-service/, revision-service/, auditoria-service/
+end note
+@enduml

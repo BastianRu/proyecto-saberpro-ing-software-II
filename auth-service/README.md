@@ -61,8 +61,8 @@ Variables de configuracion en `src/main/resources/application.properties`:
 | `auth.token.ttl-minutes` | `60` | Vigencia del token en minutos. |
 
 > En un despliegue real hay que cambiar el secreto y usar el mismo valor en
-> `auth-service` (`auth.token.secret`) y en `banco-service`
-> (`banco.token.secret`).
+> `auth-service` (`auth.token.secret`) y en los otros tres servicios
+> (`auth.token.secret`).
 
 ## Contrato de la API REST
 

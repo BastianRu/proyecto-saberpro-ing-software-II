@@ -1,0 +1,37 @@
+@startuml
+title C4 Nivel 3 — Componentes de Banco, Revisión y Auditoría
+package "banco-service :8082" {
+  [QuestionController] --> [IQuestionService]
+  [IQuestionService] --> [QuestionService]
+  [QuestionService] --> [QuestionPipeline]
+  [QuestionPipeline] --> [7 Filter]
+  [QuestionService] --> [IQuestionRepository]
+  [IQuestionRepository] --> [SQLiteQuestionRepository]
+  [QuestionService] --> [IEventPublisher]
+  [IEventPublisher] --> [RabbitEventPublisher]
+  [BearerAuthFilter] --> [TokenVerifier]
+  [QuestionController] --> [BearerAuthFilter]
+}
+package "revision-service :8083" {
+  [ReviewController] --> [ReviewService]
+  [QuestionStateListener] --> [ReviewService]
+  [ReviewService] --> [IReviewRepository]
+  [IReviewRepository] --> [SQLiteReviewRepository]
+  [ReviewService] --> [IBancoClient]
+  [IBancoClient] --> [RestBancoClient]
+  [BearerAuthFilter] --> [TokenVerifier]
+}
+package "auditoria-service :8084" {
+  [AuditController] --> [AuditService]
+  [QuestionEventListener] --> [AuditService]
+  [AuditService] --> [IAuditRepository]
+  [IAuditRepository] --> [SQLiteAuditRepository]
+  [BearerAuthFilter] --> [TokenVerifier]
+}
+[RabbitEventPublisher] --> [QuestionStateListener] : AMQP / revision.preguntas
+[RabbitEventPublisher] --> [QuestionEventListener] : AMQP / auditoria.preguntas
+[RestBancoClient] --> [QuestionController] : PATCH /preguntas/{id}/estado
+note bottom
+Respaldo: banco-service/src/main/java/.../{api,service,pipeline,access,events,security}; revision-service/src/main/java/.../{api,service,events,access,security}; auditoria-service/src/main/java/.../{api,service,events,access,security}.
+end note
+@enduml

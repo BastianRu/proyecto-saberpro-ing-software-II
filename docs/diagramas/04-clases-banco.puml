@@ -1,0 +1,46 @@
+@startuml
+title Dominio de banco-service: Question, State y Pipeline
+class Question {
+  -QuestionState state
+  +changeState(String, String)
+  +modifyContent(QuestionDraft)
+}
+abstract class QuestionState {
+  +allowedTransitions()
+  +isEditable()
+  +submitForReview(Question)
+  +startReview(Question)
+  +approve(Question)
+  +reject(Question)
+  +publish(Question)
+  +archive(Question)
+  +returnToDraft(Question)
+}
+class BorradorState
+class PendienteRevisionState
+class EnRevisionState
+class AprobadaState
+class RechazadaState
+class PublicadaState
+class ArchivadaState
+QuestionState <|-- BorradorState
+QuestionState <|-- PendienteRevisionState
+QuestionState <|-- EnRevisionState
+QuestionState <|-- AprobadaState
+QuestionState <|-- RechazadaState
+QuestionState <|-- PublicadaState
+QuestionState <|-- ArchivadaState
+Question --> QuestionState : estado actual
+class QuestionPipeline {
+  -List<Filter> filters
+  +run(QuestionDraft)
+}
+interface Filter {
+  +process(QuestionDraft)
+}
+QuestionPipeline o-- "7" Filter
+QuestionPipeline --> QuestionDraft
+note bottom
+Respaldo: banco-service/src/main/java/com/unicauca/lisw2t2g08/banco/domain/{Question,QuestionState,QuestionStates,*State}.java y pipeline/{QuestionPipeline,Filter,*Filter}.java
+end note
+@enduml
