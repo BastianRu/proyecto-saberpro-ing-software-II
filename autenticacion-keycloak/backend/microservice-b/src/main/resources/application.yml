@@ -1,0 +1,14 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: microservice-b
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Keycloak publishes its signing keys (JWKS) and metadata under this issuer.
+          # The decoder is created lazily, so the service starts even if Keycloak is down;
+          # token validation fails (401) until Keycloak becomes reachable.
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/sistema}

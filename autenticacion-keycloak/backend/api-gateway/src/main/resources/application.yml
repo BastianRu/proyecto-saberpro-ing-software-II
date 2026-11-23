@@ -1,0 +1,41 @@
+server:
+  port: 8081
+
+# Base URLs of the downstream services (overridable by environment/properties; the tests use it).
+services:
+  microservice-a:
+    url: ${MICROSERVICE_A_URL:http://localhost:8082}
+  microservice-b:
+    url: ${MICROSERVICE_B_URL:http://localhost:8083}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # /a/hello_student  ->  http://localhost:8082/hello_student
+        - id: microservice-a
+          uri: ${services.microservice-a.url}
+          predicates:
+            - Path=/a/**
+          filters:
+            - StripPrefix=1
+        # /b/hello_student  ->  http://localhost:8083/hello_student
+        - id: microservice-b
+          uri: ${services.microservice-b.url}
+          predicates:
+            - Path=/b/**
+          filters:
+            - StripPrefix=1
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # The gateway validates signature, issuer and expiry using Keycloak's published keys (JWKS).
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/sistema}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
